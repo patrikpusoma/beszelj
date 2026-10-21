@@ -214,6 +214,10 @@ textarea{min-height:96px;resize:vertical}
 .undobar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:18px;padding:8px 8px 8px 16px;display:flex;align-items:center;gap:12px;z-index:30;max-width:92vw;box-shadow:0 8px 30px rgba(0,0,0,.25)}
 .undobar[hidden]{display:none}
 .undobar .btn{min-height:40px;padding:8px 14px;font-size:.92rem}
+/*whatsnew-css*/
+.whatsnew{position:fixed;inset:0;background:rgba(10,15,30,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.wncard{background:var(--surface);color:var(--ink);border-radius:24px;padding:22px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.wncard ul{padding-left:20px;margin:12px 0 18px}.wncard li{margin:6px 0}
 /*practice-css*/
 .aitag{font-size:.7rem;background:var(--blue);color:#fff;padding:1px 7px;border-radius:999px;vertical-align:middle;font-family:var(--body)}
 .rowbtn.practice{border:2px solid var(--mint)}
@@ -234,7 +238,7 @@ textarea{min-height:96px;resize:vertical}
 <div id="app"></div>
 <script>
 var __BOOT=(function(){
-  var OWN="2.14";
+  var OWN="2.15";
   window.__APP_VERSION=OWN;
   function cmp(a,b){a=String(a||"0").split(".").map(Number);b=String(b||"0").split(".").map(Number);for(var i=0;i<Math.max(a.length,b.length);i++){var x=a[i]||0,y=b[i]||0;if(x!==y)return x>y?1:-1;}return 0;}
   function verOf(h){var m=/var OWN="([0-9.]+)"/.exec(h||"");return m?m[1]:null;}
@@ -1897,6 +1901,17 @@ render();
 initCaps();
 if(NATIVE&&AndroidBridge.ready){try{AndroidBridge.ready();}catch(e){}}
 ruSet("beszelj-remote-ok",APP_VERSION);
+/* what's new */
+const CHANGELOG={
+ "2.15":["Frissítés után az app megmutatja, mi változott (ezt látod most 🙂)","Az első távoli frissítés sikeresen megérkezett a GitHubról 🎉"]
+};
+(function(){const prev=ruGet("beszelj-seen-ver")||(S.level!==null&&S.updatedAt?"2.14":"");ruSet("beszelj-seen-ver",APP_VERSION);
+  if(!prev||prev===APP_VERSION||S.level===null)return;
+  const items=Object.keys(CHANGELOG).filter(v=>__BOOT.cmp(v,prev)>0&&__BOOT.cmp(v,APP_VERSION)<=0).sort((a,b)=>__BOOT.cmp(a,b)).flatMap(v=>CHANGELOG[v]);
+  const box=document.createElement("div");box.className="whatsnew";box.setAttribute("role","dialog");
+  box.innerHTML=`<div class="wncard"><h3>✨ Frissítve: v${esc(APP_VERSION)}</h3>${items.length?`<ul>${items.map(i=>`<li>${esc(i)}</li>`).join("")}</ul>`:"<p>Kisebb javítások.</p>"}<button class="btn big sun" id="wnok">Szuper!</button></div>`;
+  document.body.appendChild(box);document.getElementById("wnok").addEventListener("click",()=>box.remove());
+})();
 ruAuto();
 window.__dbg=function(c){return eval(c);};
 }
