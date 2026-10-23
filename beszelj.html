@@ -3,6 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Beszélj!">
+<meta name="theme-color" content="#13203B">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
 <meta name="beszelj-app" content="BESZELJ_APP">
 <title>Beszélj! – napi 10 perc angol</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -238,7 +245,7 @@ textarea{min-height:96px;resize:vertical}
 <div id="app"></div>
 <script>
 var __BOOT=(function(){
-  var OWN="2.15";
+  var OWN="2.16";
   window.__APP_VERSION=OWN;
   function cmp(a,b){a=String(a||"0").split(".").map(Number);b=String(b||"0").split(".").map(Number);for(var i=0;i<Math.max(a.length,b.length);i++){var x=a[i]||0,y=b[i]||0;if(x!==y)return x>y?1:-1;}return 0;}
   function verOf(h){var m=/var OWN="([0-9.]+)"/.exec(h||"");return m?m[1]:null;}
@@ -1719,12 +1726,12 @@ function vSettings(){
    <input type="text" id="key" placeholder="sk-…" value="${esc(API_KEY)}" autocomplete="off" spellcheck="false" style="margin-top:10px">
    <div style="display:flex;gap:10px;margin-top:10px"><button class="btn" data-act="savekey">Mentés</button>${API_KEY?`<button class="btn ghost" data-act="delkey">Törlés</button>`:""}</div>
    <p style="margin-top:8px;font-weight:700">${sample?"✅ Claude-on belül fut, kulcs nem kell.":API_KEY?"✅ Kulcs elmentve":"⚠️ Nincs kulcs: csak az alap lecke érhető el"}</p></div>
-  <div class="panel"><h3>🌐 Automatikus frissítés</h3>
+  ${NATIVE?`<div class="panel"><h3>🌐 Automatikus frissítés</h3>
    <p class="muted" style="font-size:.92rem">Add meg a frissítőfájl internetes címét (például a GitHubon lévő beszelj.html linkjét). Az app néhány óránként magától megnézi, van-e új verzió.</p>
    <input type="text" id="ruurl" placeholder="https://raw.githubusercontent.com/…/beszelj.html" value="${esc(ruGet(RU_URL))}" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-top:10px">
    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><button class="btn" data-act="ru-save">Mentés</button>${ruGet(RU_URL)?`<button class="btn ghost" data-act="ru-check">🔄 Frissítés keresése most</button>`:""}</div>
    ${ruPending()?`<div class="banner" style="margin-top:12px">✨ Letöltve: v${esc(ruPending())}<br><button class="btn sun" data-act="ru-restart" style="margin-top:8px">🚀 Betöltés most</button></div>`:""}
-   <p class="muted" style="font-size:.85rem;margin-top:8px">${ruGet(RU_LAST)?"Utoljára ellenőrizve: "+esc(new Date(ruGet(RU_LAST)).toLocaleString("hu-HU")):"Még nem volt ellenőrzés."}</p></div>
+   <p class="muted" style="font-size:.85rem;margin-top:8px">${ruGet(RU_LAST)?"Utoljára ellenőrizve: "+esc(new Date(ruGet(RU_LAST)).toLocaleString("hu-HU")):"Még nem volt ellenőrzés."}</p></div>`:`<div class="panel"><h3>🌐 Webes verzió</h3><p class="muted" style="font-size:.92rem">Ez a böngészős változat mindig a legfrissebb verzióval indul, külön frissíteni nem kell. Tartalom: v${esc(APP_VERSION)}</p></div>`}
   ${NATIVE?`<div class="panel"><h3>Alkalmazás frissítése</h3><p class="muted" style="font-size:.92rem">Tartalom: v${APP_VERSION}${hasUpd?" (frissítésből)":""} · App: v${esc(shell)}</p>
    <p style="font-size:.95rem;margin-top:6px">Ha új frissítést kapsz (egy .html vagy .zip fájl), töltsd le a telefonra, és itt töltsd be. Nem kell újratelepíteni, a haladásod megmarad.</p>
    <button class="btn" data-act="pickupdate" style="margin-top:10px">📥 Frissítés betöltése fájlból</button>
@@ -1903,7 +1910,8 @@ if(NATIVE&&AndroidBridge.ready){try{AndroidBridge.ready();}catch(e){}}
 ruSet("beszelj-remote-ok",APP_VERSION);
 /* what's new */
 const CHANGELOG={
- "2.15":["Frissítés után az app megmutatja, mi változott (ezt látod most 🙂)","Az első távoli frissítés sikeresen megérkezett a GitHubról 🎉"]
+ "2.15":["Frissítés után az app megmutatja, mi változott (ezt látod most 🙂)","Az első távoli frissítés sikeresen megérkezett a GitHubról 🎉"],
+ "2.16":["Az app mostantól iPhone-on is használható: Safariból a kezdőképernyőre tehető, saját ikonnal","A haladásod a 💾 Biztonsági mentéssel átvihető egyik telefonról a másikra"]
 };
 (function(){const prev=ruGet("beszelj-seen-ver")||(S.level!==null&&S.updatedAt?"2.14":"");ruSet("beszelj-seen-ver",APP_VERSION);
   if(!prev||prev===APP_VERSION||S.level===null)return;
