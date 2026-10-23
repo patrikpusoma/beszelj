@@ -245,7 +245,7 @@ textarea{min-height:96px;resize:vertical}
 <div id="app"></div>
 <script>
 var __BOOT=(function(){
-  var OWN="2.17";
+  var OWN="2.18";
   window.__APP_VERSION=OWN;
   function cmp(a,b){a=String(a||"0").split(".").map(Number);b=String(b||"0").split(".").map(Number);for(var i=0;i<Math.max(a.length,b.length);i++){var x=a[i]||0,y=b[i]||0;if(x!==y)return x>y?1:-1;}return 0;}
   function verOf(h){var m=/var OWN="([0-9.]+)"/.exec(h||"");return m?m[1]:null;}
@@ -1543,7 +1543,14 @@ function pSprint(){
   pTimer=setInterval(()=>{const left=Math.max(0,Math.ceil((P.end-Date.now())/1000));const el=document.getElementById("ptime");if(el)el.textContent="0:"+String(left).padStart(2,"0");if(!left)sprintEnd();},250);
 }
 function sprintQ(){
-  const all=learned(),w=all[Math.floor(Math.random()*all.length)],dir=Math.random()<0.5;
+  const all=learned();
+  if(!P.deck||!P.deck.length){
+    const weak=new Set(dueWords().concat(S.words.filter(x=>x.miss>0)).map(x=>x.en.toLowerCase()));
+    const a=shuffle(all.filter(x=>weak.has(x.en.toLowerCase()))),b=shuffle(all.filter(x=>!weak.has(x.en.toLowerCase())));
+    P.deck=a.concat(b);
+    if(P.last&&P.deck.length>1&&P.deck[0].en===P.last){P.deck.push(P.deck.shift());}
+  }
+  const w=P.deck.shift(),dir=Math.random()<0.5;P.last=w.en;
   const others=shuffle(all.filter(x=>x.en!==w.en&&x.hu!==w.hu)).slice(0,3);
   const correct=dir?w.hu:w.en,opts=shuffle([correct].concat(others.map(o=>dir?o.hu:o.en)));
   P.q={w,dir,correct,opts};P.lock=false;
@@ -1916,6 +1923,7 @@ ruSet("beszelj-remote-ok",APP_VERSION);
 /* what's new */
 const CHANGELOG={
  "2.15":["Frissítés után az app megmutatja, mi változott (ezt látod most 🙂)","Az első távoli frissítés sikeresen megérkezett a GitHubról 🎉"],
+ "2.18":["Villám-sprint: egy körön belül minden szó csak egyszer jön, amíg az összes el nem fogy; a gyengébb szavak kerülnek előre"],
  "2.17":["Szerepjáték: a szereplők már nem teljesítik helyetted a feladataidat, és nem ők teszik fel a kérdéseket, amiket neked kell"],
  "2.16":["Az app mostantól iPhone-on is használható: Safariból a kezdőképernyőre tehető, saját ikonnal","A haladásod a 💾 Biztonsági mentéssel átvihető egyik telefonról a másikra"]
 };
