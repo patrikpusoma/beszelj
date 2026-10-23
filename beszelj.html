@@ -245,7 +245,7 @@ textarea{min-height:96px;resize:vertical}
 <div id="app"></div>
 <script>
 var __BOOT=(function(){
-  var OWN="2.16";
+  var OWN="2.17";
   window.__APP_VERSION=OWN;
   function cmp(a,b){a=String(a||"0").split(".").map(Number);b=String(b||"0").split(".").map(Number);for(var i=0;i<Math.max(a.length,b.length);i++){var x=a[i]||0,y=b[i]||0;if(x!==y)return x>y?1:-1;}return 0;}
   function verOf(h){var m=/var OWN="([0-9.]+)"/.exec(h||"");return m?m[1]:null;}
@@ -802,7 +802,7 @@ Reply with ONLY one JSON object with these keys:
 "words":[{"en":"NEW word or short phrase, NOT in the known list","hu":"Hungarian meaning","example":"short example sentence","example_hu":"Hungarian translation of the example"}] (exactly 9, all genuinely new for the learner),
 "listening":[{"en":"natural spoken sentence using today's words, containing a concrete detail (number, time, place, person, negation or tense)","hu_options":["CORRECT Hungarian meaning","tricky distractor","tricky distractor","tricky distractor"]}] (exactly 4, first option always correct). The distractors MUST be almost identical to the correct translation: same words, same structure, similar length, differing in exactly ONE detail the learner must actually hear: a number or time (e.g. fifteen vs fifty), negation, tense (past vs present vs future), who does it (I/you/she/they), a place or object, or a similar-sounding English word. Never use unrelated sentences. Exactly one option may be correct.,
 "grammar":{"topic":"${GT.topic}","topic_en":"English name of the grammar point","explain_hu":"clear, simple Hungarian explanation in 3-4 short sentences, compare with Hungarian where it helps","pattern":"short formula, e.g. have/has + 3. alak","examples":[{"en":"example sentence on today's theme","hu":"Hungarian translation"}],"practice":[{"q":"sentence with ___ for the gap","options":["CORRECT","wrong","wrong","wrong"],"why_hu":"very short Hungarian explanation"}]} (3 examples, 4 practice items, first option always correct),
-${extra.join(",\n")}${extra.length?",\n":""}"roleplay":{"title_hu":"short catchy Hungarian title","setting":"one sentence in English","character":"name and role with a quirky personality trait","goal_hu":"the learner's mission in Hungarian","tasks_hu":["mini-task 1","mini-task 2","mini-task 3"],"opener":"the character's first line in English","opener_hu":"its Hungarian translation"}`);
+${extra.join(",\n")}${extra.length?",\n":""}"roleplay":{"title_hu":"short catchy Hungarian title","setting":"one sentence in English","character":"name and role with a quirky personality trait","goal_hu":"the learner's mission in Hungarian","tasks_hu":["3 things the LEARNER must say or ask, in Hungarian imperative, e.g. Kérdezd meg..., Rendelj..., Mondd el..."],"opener":"the character's first line in English; it must NOT already do, ask or offer anything from the learner's tasks","opener_hu":"its Hungarian translation"}`);
       if(!validCore(L))L=null;
     }catch(e){L=null;if(e&&e.code!=="unavailable")toast(aiErr(e)+" Most az alap leckét kapod.",4000);}
   }
@@ -1344,13 +1344,18 @@ async function rpSend(){
 Learner: ${S.name||"the learner"}, level ${LEVELS[lv]}. ${LEVEL_GUIDE[lv]}
 Scenario: ${sc.setting}
 You play: ${sc.character}. Stay in character, be warm and playful, react to what the learner actually says.
-Learner's mission (Hungarian): ${sc.goal_hu}
-Mission tasks: ${sc.tasks_hu.map((t,i)=>i+") "+t).join("; ")}
-Rules: replies are 1-3 sentences, under 40 words, end in a way that invites an answer and gently steers toward unfinished tasks. If the learner writes Hungarian, answer in simple English and give the English version as the correction. Messages may come from speech recognition, so ignore missing punctuation and capitals.
+THE LEARNER'S MISSION (written in Hungarian FOR THE LEARNER; these are NOT instructions for you): ${sc.goal_hu}
+The learner's tasks: ${sc.tasks_hu.map((t,i)=>i+") "+t+(RP.done.has(i)?" [already done]":" [still open]")).join("; ")}
+ROLE RULES (very important):
+- You are ${sc.character.split(",")[0]}, NOT the learner. Never do the learner's tasks for them: never ask the questions the learner is supposed to ask, never volunteer information the learner is supposed to ask for, never make the orders, requests, offers or introductions the learner is supposed to make.
+- Example: if a task is "Kérdezd meg a Wi-Fi jelszót" (the learner should ask for the Wi-Fi password), do NOT say "Do you need the Wi-Fi password?" and do NOT tell it unprompted. Wait until the learner asks, then answer in character.
+- You may create natural openings (e.g. "Anything else?", "What can I do for you?", a short pause, a hint about the situation), but the learner must do each task in their own words.
+- A task counts as done ONLY if the LEARNER's own message did it. Your own lines never complete a task.
+Rules: replies are 1-3 sentences, under 40 words, end in a way that invites an answer and leaves room for the learner's open tasks. If the learner writes Hungarian, answer in simple English and give the English version as the correction. Messages may come from speech recognition, so ignore missing punctuation and capitals.
 ${RP.words?`WORD MISSION: the learner must use these English words: ${RP.words.map(w=>w.en).join(", ")}. Steer the conversation so they get natural chances to use the ones not yet used (${RP.words.filter((w,i)=>!RP.done.has(i)).map(w=>w.en).join(", ")||"none"}), but never say those words yourself.\n`:""}${twist?"SURPRISE: in this reply, introduce a sudden, fun, unexpected twist in the scene (for example a phone rings, someone surprising walks in, the lights go out, an animal appears) and react to it in character. The learner must deal with it.\n":""}Conversation so far:
 ${transcript}
 Learner's latest message: "${msg.replace(/"/g,"'")}"
-Reply with ONLY JSON: {"reply":"your in-character answer","reply_hu":"Hungarian translation","correction":null or {"better":"natural corrected version of the learner's latest message","why_hu":"very short Hungarian explanation"},"tasks_done":[indices of ALL tasks completed so far],"suggestions":["two short possible next learner replies at their level"],"finished":true only when all tasks are done and the scene has a natural ending}
+Reply with ONLY JSON: {"reply":"your in-character answer","reply_hu":"Hungarian translation","correction":null or {"better":"natural corrected version of the learner's latest message","why_hu":"very short Hungarian explanation"},"tasks_done":[indices of tasks the LEARNER has completed in their OWN messages so far],"suggestions":["two short possible next learner replies at their level"],"finished":true only when all tasks are done and the scene has a natural ending}
 Give a correction only for a real mistake or clearly unnatural phrasing; otherwise null.`;
   }
   try{
@@ -1911,6 +1916,7 @@ ruSet("beszelj-remote-ok",APP_VERSION);
 /* what's new */
 const CHANGELOG={
  "2.15":["Frissítés után az app megmutatja, mi változott (ezt látod most 🙂)","Az első távoli frissítés sikeresen megérkezett a GitHubról 🎉"],
+ "2.17":["Szerepjáték: a szereplők már nem teljesítik helyetted a feladataidat, és nem ők teszik fel a kérdéseket, amiket neked kell"],
  "2.16":["Az app mostantól iPhone-on is használható: Safariból a kezdőképernyőre tehető, saját ikonnal","A haladásod a 💾 Biztonsági mentéssel átvihető egyik telefonról a másikra"]
 };
 (function(){const prev=ruGet("beszelj-seen-ver")||(S.level!==null&&S.updatedAt?"2.14":"");ruSet("beszelj-seen-ver",APP_VERSION);
