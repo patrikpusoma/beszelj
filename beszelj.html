@@ -221,6 +221,8 @@ textarea{min-height:96px;resize:vertical}
 .undobar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:18px;padding:8px 8px 8px 16px;display:flex;align-items:center;gap:12px;z-index:30;max-width:92vw;box-shadow:0 8px 30px rgba(0,0,0,.25)}
 .undobar[hidden]{display:none}
 .undobar .btn{min-height:40px;padding:8px 14px;font-size:.92rem}
+/*lang-css*/
+.langbtn{font-size:1.45rem}
 /*whatsnew-css*/
 .whatsnew{position:fixed;inset:0;background:rgba(10,15,30,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
 .wncard{background:var(--surface);color:var(--ink);border-radius:24px;padding:22px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)}
@@ -245,7 +247,7 @@ textarea{min-height:96px;resize:vertical}
 <div id="app"></div>
 <script>
 var __BOOT=(function(){
-  var OWN="2.18";
+  var OWN="2.19";
   window.__APP_VERSION=OWN;
   function cmp(a,b){a=String(a||"0").split(".").map(Number);b=String(b||"0").split(".").map(Number);for(var i=0;i<Math.max(a.length,b.length);i++){var x=a[i]||0,y=b[i]||0;if(x!==y)return x>y?1:-1;}return 0;}
   function verOf(h){var m=/var OWN="([0-9.]+)"/.exec(h||"");return m?m[1]:null;}
@@ -267,6 +269,8 @@ var __BOOT=(function(){
 </script>
 <script>
 function __main(){
+
+function __main(){
 "use strict";
 const APP_VERSION=window.__APP_VERSION||"2.14";
 /* ---------- native bridge ---------- */
@@ -277,14 +281,46 @@ function nativePost(url,headers,body){return new Promise(res=>{const id="h"+(++h
 window.__updateResult=function(ok,msg){toast(msg,4500);};
 
 /* ---------- data ---------- */
+/* ---------- languages ---------- */
+const LANGS={
+ en:{name:"Angol",flag:"🇬🇧",ai:"English",hu:"angolul",adj:"angol",acc:[["en-GB","🇬🇧 Brit"],["en-US","🇺🇸 Amerikai"]],art:["to","a","an","the"],cityAdj:"londoni",cityIn:"Manchesterben",
+  buddy:{name:"Emma",with:"Emmával",character:"Emma, a warm, curious 30-year-old English woman from Brighton who loves coffee, her cat Biscuit and travelling",desc:"Brightonból, szereti a kávét és Biscuit nevű macskáját.",hi:"Hi! I'm Emma from Brighton. Nice to meet you! What's your name?",hi_hu:"Szia! Emma vagyok Brightonból. Örülök, hogy megismerhetlek! Hogy hívnak?"}},
+ de:{name:"Német",flag:"🇩🇪",ai:"German",hu:"németül",adj:"német",acc:[["de-DE","🇩🇪 Németország"],["de-AT","🇦🇹 Ausztria"]],art:["zu","der","die","das","den","dem","des","ein","eine","einen","einem","einer"],cityAdj:"müncheni",cityIn:"Hamburgban",
+  buddy:{name:"Lena",with:"Lenával",character:"Lena, a cheerful, curious 29-year-old woman from Munich who loves hiking, baking and her old bike",desc:"Münchenből, szeret túrázni, sütni és biciklizni.",hi:"Hallo! Ich bin Lena aus München. Schön, dich kennenzulernen! Wie heißt du?",hi_hu:"Szia! Lena vagyok Münchenből. Örülök, hogy megismerhetlek! Hogy hívnak?"}},
+ es:{name:"Spanyol",flag:"🇪🇸",ai:"Spanish",hu:"spanyolul",adj:"spanyol",acc:[["es-ES","🇪🇸 Spanyolország"],["es-MX","🇲🇽 Mexikó"]],art:["el","la","los","las","un","una","unos","unas"],cityAdj:"madridi",cityIn:"Valenciában",
+  buddy:{name:"Lucía",with:"Lucíával",character:"Lucía, a warm, talkative 28-year-old woman from Seville who loves flamenco, tapas and the sea",desc:"Sevillából, szereti a flamencót, a tapast és a tengert.",hi:"¡Hola! Soy Lucía, de Sevilla. ¡Encantada! ¿Cómo te llamas?",hi_hu:"Szia! Lucía vagyok Sevillából. Örülök! Hogy hívnak?"}},
+ it:{name:"Olasz",flag:"🇮🇹",ai:"Italian",hu:"olaszul",adj:"olasz",acc:[["it-IT","🇮🇹 Olaszország"]],art:["il","lo","la","i","gli","le","un","uno","una","l"],cityAdj:"római",cityIn:"Torinóban",
+  buddy:{name:"Giulia",with:"Giuliával",character:"Giulia, a lively 30-year-old woman from Bologna who loves cooking, opera and her Vespa",desc:"Bolognából, szeret főzni, operát hallgatni és Vespázni.",hi:"Ciao! Sono Giulia, di Bologna. Piacere! Come ti chiami?",hi_hu:"Szia! Giulia vagyok Bolognából. Örvendek! Hogy hívnak?"}},
+ fr:{name:"Francia",flag:"🇫🇷",ai:"French",hu:"franciául",adj:"francia",acc:[["fr-FR","🇫🇷 Franciaország"],["fr-CA","🇨🇦 Kanada"]],art:["le","la","les","l","un","une","des"],cityAdj:"párizsi",cityIn:"Marseille-ben",
+  buddy:{name:"Camille",with:"Camille-lal",character:"Camille, a friendly, witty 31-year-old woman from Lyon who loves cinema, cheese and long walks by the river",desc:"Lyonból, szereti a mozit, a sajtokat és a hosszú folyóparti sétákat.",hi:"Salut ! Je suis Camille, de Lyon. Enchantée ! Tu t'appelles comment ?",hi_hu:"Szia! Camille vagyok Lyonból. Örvendek! Hogy hívnak?"}}
+};
+let LANG="en";try{LANG=localStorage.getItem("beszelj-lang")||"en";}catch(e){}if(!LANGS[LANG])LANG="en";
+const az=w=>(/^[aáeéiíoóöőuúüű]/i.test(w)?"az ":"a ")+w;
+const LG=()=>LANGS[LANG],TL=()=>LANGS[LANG].ai,TLHU=()=>LANGS[LANG].hu,isEN=()=>LANG==="en";
+const keyFor=(base,code)=>code==="en"?base:base+"-"+code;
+const lsKey=base=>keyFor(base,LANG);
+const LANGNOTE=()=>isEN()?"":`IMPORTANT: the learner is learning ${TL()}, not English. Every target-language text (every field named "en", sentences, options in the target language, openers, replies) must be in ${TL()}. The field names say "en" for technical reasons only.\n`;
+function stripArt(x){const arts=LG().art;let s=x;for(const a of arts){if(s.startsWith(a+" ")){s=s.slice(a.length+1);break;}}return s;}
+function buddySc(){const b=LG().buddy;return {id:"buddy",buddy:true,emoji:"☕",title_hu:"Csevegés "+b.with,character:b.character,goal_hu:`Beszélgess kötetlenül, mesélj magadról. ${b.name} emlékezni fog rá.`,tasks_hu:[]};}
+function scView(sc){
+  if(isEN())return sc;const l=LG(),o=Object.assign({},sc);
+  if(sc.id==="cafe")o.title_hu=l.cityAdj.charAt(0).toUpperCase()+l.cityAdj.slice(1)+" kávézó";
+  if(sc.id==="garage")o.title_hu="Autószerelő "+l.cityIn;
+  if(sc.id==="coworker")o.sub=`Első nap egy ${l.cityAdj} irodában`;
+  if(sc.id==="neighbour")o.sub=`Egy ${l.adj} nyugdíjas költözött melléd`;
+  if(sc.id==="royal")o.sub=`Nagyon előkelő ${l.adj} vacsora`;
+  if(sc.id==="exchange")o.sub="Videóhívás valakivel, aki magyarul tanul";
+  return o;
+}
+
 const LEVELS=["A1","A2","B1","B2","C1"];
 const LEVEL_HU=["Kezdő","Alapozó","Középhaladó","Felsőközép","Haladó"];
 const LEVEL_GUIDE=[
  "A1: very short, very simple sentences, present simple, the most common 500 words.",
  "A2: short simple sentences, present and past simple, everyday vocabulary.",
- "B1: natural everyday English, a few common idioms that are clear from context.",
- "B2: natural conversational English, phrasal verbs, some humour and nuance.",
- "C1: rich, natural, native-like English with idioms and varied structures."
+ "B1: natural everyday language, a few common idioms that are clear from context.",
+ "B2: natural conversational language, idiomatic verbs and expressions, some humour and nuance.",
+ "C1: rich, natural, native-like language with idioms and varied structures."
 ];
 const INTERESTS=["Utazás","Munka","Filmek & sorozatok","Autók & technika","Sport","Főzés","Zene","Játékok","Természet","Vásárlás"];
 const TOPICS=[
@@ -356,10 +392,11 @@ function nextGrammar(){
   const lv=S.level??1, done=S.grammar||[];
   const weak=done.filter(g=>g.score<3&&g.date<addDays(-3)).sort((a,b)=>a.date<b.date?-1:1)[0];
   if(weak&&Math.random()<0.4) return {topic:weak.topic,review:true};
-  const t=GRAMMAR[lv].find(t=>!done.some(g=>g.topic===t));
+  const CUR=curriculum();if(!CUR)return {topic:"Alapvető mondatszerkezet",review:false};
+  const t=CUR[lv].find(t=>!done.some(g=>g.topic===t));
   if(t) return {topic:t,review:false};
-  const old=done.filter(g=>GRAMMAR[lv].includes(g.topic)).sort((a,b)=>a.date<b.date?-1:1)[0];
-  return {topic:old?old.topic:GRAMMAR[lv][0],review:true};
+  const old=done.filter(g=>CUR[lv].includes(g.topic)).sort((a,b)=>a.date<b.date?-1:1)[0];
+  return {topic:old?old.topic:CUR[lv][0],review:true};
 }
 
 const TEST=[
@@ -399,7 +436,7 @@ const SCENARIOS=[
  // helyzetek
  {id:"cafe",group:"world",emoji:"☕",title_hu:"Londoni kávézó",sub:"Rendelj, és szerezd meg a Wi-Fi jelszót",setting:"A tiny busy café in Camden, London, on a rainy Monday morning.",character:"Maya, a cheerful barista who loves inventing silly drink names",goal_hu:"Rendelj egy italt és egy harapnivalót, majd kérd el a Wi-Fi jelszót.",tasks_hu:["Rendelj egy italt","Kérj mellé valami ennivalót","Kérdezd meg a Wi-Fi jelszót"],opener:"Morning! Terrible weather, isn't it? What can I get you today?",opener_hu:"Jó reggelt! Szörnyű idő van, ugye? Mit adhatok ma?"},
  {id:"detective",group:"world",emoji:"🕵️",title_hu:"Te vagy a detektív",sub:"Valaki hazudik az eltűnt gyémántról",setting:"An old English country house. The Duchess's diamond has vanished overnight. You are the detective.",character:"Mr Higgins, the nervous butler who is secretly hiding something small but embarrassing",goal_hu:"Hallgasd ki a komornyikot, és leplezd le, mit titkol.",tasks_hu:["Kérdezd meg, hol volt este 9-kor","Tudd meg, kinél van a széf kulcsa","Fogd meg egy ellentmondáson"],opener:"Good evening, detective. I... I suppose you want to ask me some questions?",opener_hu:"Jó estét, nyomozó úr. Gondolom... kérdéseket szeretne feltenni nekem?"},
- {id:"alien",group:"world",emoji:"🛸",title_hu:"Marslakó turista",sub:"Magyarázd el neki a földi szokásokat",setting:"A park bench. A friendly alien tourist has just landed and is very confused by humans.",character:"Zorp, a curious and polite alien who takes everything literally",goal_hu:"Magyarázz el Zorpnak három földi dolgot egyszerű angolsággal.",tasks_hu:["Magyarázd el, mi az a sorban állás","Magyarázd el, mire jó az esernyő","Ajánlj neki egy földi ételt"],opener:"Greetings, human! Why are those people standing in a line and doing nothing? Is it a ritual?",opener_hu:"Üdvözletem, ember! Miért állnak azok az emberek egy sorban, és nem csinálnak semmit? Ez valami szertartás?"},
+ {id:"alien",group:"world",emoji:"🛸",title_hu:"Marslakó turista",sub:"Magyarázd el neki a földi szokásokat",setting:"A park bench. A friendly alien tourist has just landed and is very confused by humans.",character:"Zorp, a curious and polite alien who takes everything literally",goal_hu:"Magyarázz el Zorpnak három földi dolgot egyszerű mondatokkal.",tasks_hu:["Magyarázd el, mi az a sorban állás","Magyarázd el, mire jó az esernyő","Ajánlj neki egy földi ételt"],opener:"Greetings, human! Why are those people standing in a line and doing nothing? Is it a ritual?",opener_hu:"Üdvözletem, ember! Miért állnak azok az emberek egy sorban, és nem csinálnak semmit? Ez valami szertartás?"},
  {id:"garage",group:"world",emoji:"🔧",title_hu:"Autószerelő Manchesterben",sub:"Furcsa hang jön a motorból",setting:"A small car repair garage in Manchester. Your car has started making a strange noise.",character:"Dave, a friendly but very talkative mechanic with a strong love for old cars",goal_hu:"Írd le a hibát, kérdezd meg az árat és azt, mikor lesz kész.",tasks_hu:["Írd le, milyen hangot ad az autó","Kérdezd meg, mennyibe kerül","Kérdezd meg, mikor lesz kész"],opener:"Alright mate! What seems to be the problem with your car?",opener_hu:"Szia, haver! Mi a gond az autóddal?"},
  {id:"airport",group:"world",emoji:"🧳",title_hu:"Elveszett bőrönd",sub:"Reptéri ügyintézés kicsit káoszban",setting:"The lost luggage desk at Dublin Airport. Your suitcase did not arrive.",character:"Siobhan, a tired but kind airline employee at the end of a long shift",goal_hu:"Jelentsd be az elveszett bőröndöt, írd le, és add meg, hova szállítsák.",tasks_hu:["Mondd el, mi történt","Írd le a bőröndöt (szín, méret)","Add meg, hova kéred kiszállítani"],opener:"Hello there. Let me guess, your bag didn't come out on the belt?",opener_hu:"Jó napot. Hadd találjam ki: nem jött ki a bőröndje a szalagon?"},
  {id:"interview",group:"world",emoji:"💼",title_hu:"Állásinterjú",sub:"Mutatkozz be magabiztosan",setting:"A video job interview with an international company.",character:"Ms Carter, a calm, professional HR manager who asks follow-up questions",goal_hu:"Mutatkozz be, beszélj az erősségeidről, és tegyél fel te is egy kérdést.",tasks_hu:["Mutatkozz be röviden","Mondj egy erősséget példával","Kérdezz a munkáról"],opener:"Hello, thanks for joining today. Could you start by telling me a little about yourself?",opener_hu:"Üdvözlöm, köszönöm, hogy bejelentkezett. Kezdené azzal, hogy mesél egy kicsit magáról?"},
@@ -441,7 +478,7 @@ const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(M
 const dayStr=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const todayStr=()=>dayStr(new Date());
 const addDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return dayStr(d);};
-const norm=s=>String(s).toLowerCase().replace(/[’']/g,"'").replace(/[^a-z0-9' ]/g," ").replace(/\s+/g," ").trim();
+const norm=s=>String(s).toLowerCase().replace(/[’']/g,"'").replace(/[^\p{L}\p{N}' ]/gu," ").replace(/\s+/g," ").trim();
 const toks=s=>norm(s).split(" ").filter(Boolean);
 function lcs(a,b){const n=a.length,m=b.length,dp=Array.from({length:n+1},()=>new Array(m+1).fill(0));for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)dp[i][j]=a[i]===b[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);const keep=new Set();let i=0,j=0;while(i<n&&j<m){if(a[i]===b[j]){keep.add(i);i++;j++;}else if(dp[i+1][j]>=dp[i][j+1])i++;else j++;}return {len:dp[0][0],keep};}
 let toastTimer;
@@ -451,17 +488,23 @@ function tapTwice(key,msg){const now=Date.now();if(armed[key]&&now-armed[key]<35
 
 /* ---------- state ---------- */
 const LS="beszelj-v1", KEYLS="beszelj-openai-key";
-function defaultState(){return {v:2,name:"",interests:[],level:null,levelNote:"",focus:[],xp:0,streak:0,bestStreak:0,lastDay:null,sessions:0,words:[],themes:[],mistakes:[],buddyFacts:[],buddyLog:[],nextExamAt:10,examDue:false,lastExtra:{x:"",y:""},recentX:[],recentY:[],grammar:[],topicExtra:{},topicNoMore:{},settings:{rate:0.95,accent:"en-GB"},updatedAt:0};}
+function defaultState(){return {v:2,name:"",interests:[],level:null,levelNote:"",focus:[],xp:0,streak:0,bestStreak:0,lastDay:null,sessions:0,words:[],themes:[],mistakes:[],buddyFacts:[],buddyLog:[],nextExamAt:10,examDue:false,lastExtra:{x:"",y:""},recentX:[],recentY:[],grammar:[],topicExtra:{},topicNoMore:{},settings:{rate:0.95,accent:LG().acc[0][0]},updatedAt:0};}
 let S=defaultState(), API_KEY="";
-try{const r=localStorage.getItem(LS); if(r) S=Object.assign(defaultState(),JSON.parse(r));}catch(e){}
+function readProfile(code){try{const r=localStorage.getItem(keyFor(LS,code));return r?JSON.parse(r):null;}catch(e){return null;}}
+function allProfiles(){const o={};Object.keys(LANGS).forEach(c=>{const p=c===LANG?S:readProfile(c);if(p&&(p.updatedAt||p.level!==null))o[c]=p;});return o;}
+function migrateS(){S.words.forEach(w=>{if(w.box==null){w.box=1;w.due=todayStr();w.miss=w.miss||0;}});S.bestStreak=Math.max(S.bestStreak||0,S.streak||0);}
+{const r=readProfile(LANG);if(r)S=Object.assign(defaultState(),r);}
 try{API_KEY=localStorage.getItem(KEYLS)||"";}catch(e){}
-if(NATIVE&&!S.updatedAt){ try{const b=AndroidBridge.loadState&&AndroidBridge.loadState(); if(b){const o=JSON.parse(b); if(o.state){S=Object.assign(defaultState(),o.state);} if(o.key&&!API_KEY){API_KEY=o.key;} try{localStorage.setItem(LS,JSON.stringify(S));localStorage.setItem(KEYLS,API_KEY);}catch(e){}}}catch(e){} }
-S.words.forEach(w=>{ if(w.box==null){w.box=1;w.due=todayStr();w.miss=w.miss||0;} });
-S.bestStreak=Math.max(S.bestStreak||0,S.streak||0);
+if(NATIVE&&!S.updatedAt&&!readProfile("en")){ try{const b=AndroidBridge.loadState&&AndroidBridge.loadState(); if(b){const o=JSON.parse(b);
+  const profs=Object.assign({},o.profiles||{});if(o.state&&!profs.en)profs.en=o.state;
+  Object.keys(profs).forEach(c=>{try{localStorage.setItem(keyFor(LS,c),JSON.stringify(profs[c]));}catch(e){}});
+  if(profs[LANG])S=Object.assign(defaultState(),profs[LANG]);
+  if(o.key&&!API_KEY){API_KEY=o.key;} try{localStorage.setItem(KEYLS,API_KEY);}catch(e){}}}catch(e){} }
+migrateS();
 function save(){
   S.updatedAt=Date.now();
-  try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}
-  if(NATIVE&&AndroidBridge.saveState){ try{AndroidBridge.saveState(JSON.stringify({state:S,key:API_KEY}));}catch(e){} }
+  try{localStorage.setItem(lsKey(LS),JSON.stringify(S));}catch(e){}
+  if(NATIVE&&AndroidBridge.saveState){ try{const pr=allProfiles();AndroidBridge.saveState(JSON.stringify({state:pr.en||null,profiles:pr,key:API_KEY,lang:LANG}));}catch(e){} }
 }
 function setKey(v){API_KEY=v; try{v?localStorage.setItem(KEYLS,v):localStorage.removeItem(KEYLS);}catch(e){} save();}
 let sample=undefined;
@@ -480,7 +523,7 @@ async function ask(prompt,opts={}){
   if(sample) return sample.json(prompt,opts);
   if(!API_KEY) throw {code:"unavailable"};
   const headers={"content-type":"application/json","authorization":"Bearer "+API_KEY};
-  const msgs=[{role:"system",content:"You are a helpful assistant inside an English-learning app. Always answer with a single valid JSON object only."},{role:"user",content:prompt}];
+  const msgs=[{role:"system",content:`You are a helpful assistant inside a ${TL()}-learning app for Hungarian speakers. Always answer with a single valid JSON object only.`},{role:"user",content:prompt}];
   let r=await httpPost("https://api.openai.com/v1/chat/completions",headers,JSON.stringify({model:"gpt-4.1-mini",messages:msgs,response_format:{type:"json_object"},max_tokens:2500,temperature:0.85}));
   if(r.status===404||(r.status===400&&/model/i.test(r.body))){
     r=await httpPost("https://api.openai.com/v1/chat/completions",headers,JSON.stringify({model:"gpt-5-mini",messages:msgs,response_format:{type:"json_object"},max_completion_tokens:5000,reasoning_effort:"minimal"}));
@@ -507,7 +550,7 @@ if(!NATIVE&&"speechSynthesis" in window){loadVoices();try{speechSynthesis.onvoic
 function speak(text,rate){
   if(NATIVE){try{AndroidBridge.speak(String(text),rate||S.settings.rate,S.settings.accent);}catch(e){}return;}
   if(!("speechSynthesis" in window))return;
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=S.settings.accent;const v=voices.find(v=>v.lang===S.settings.accent)||voices.find(v=>v.lang&&v.lang.startsWith("en"));if(v)u.voice=v;u.rate=rate||S.settings.rate;speechSynthesis.speak(u);}catch(e){}
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=S.settings.accent;const v=voices.find(v=>v.lang===S.settings.accent)||voices.find(v=>v.lang&&v.lang.replace("_","-").toLowerCase().startsWith(S.settings.accent.slice(0,2).toLowerCase()));if(v)u.voice=v;u.rate=rate||S.settings.rate;speechSynthesis.speak(u);}catch(e){}
 }
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let srBroken=!SR&&!NATIVE, activeRec=null;
@@ -560,11 +603,11 @@ function saveSession(){
   try{
     const o={day:todayStr(),L:SS.L,plan:SS.plan,step:SS.step,xp:SS.xp,fixes:SS.fixes,elapsed:Date.now()-SS.start,i:(SS.sub&&SS.sub.i)||0,reviewed:SS.reviewed};
     if(SS.plan[SS.step]==="roleplay"&&RP&&RP.inSession)o.rp={turns:RP.turns,done:[...RP.done],surprise:RP.surprise,surpriseUsed:RP.surpriseUsed,finished:RP.finished,sugg:RP.sugg};
-    localStorage.setItem(SLS,JSON.stringify(o));
+    localStorage.setItem(lsKey(SLS),JSON.stringify(o));
   }catch(e){}
 }
-function loadSession(){try{const o=JSON.parse(localStorage.getItem(SLS)||"null");return o&&o.day===todayStr()&&o.L&&o.plan?o:null;}catch(e){return null;}}
-function clearSession(){try{localStorage.removeItem(SLS);}catch(e){}}
+function loadSession(){try{const o=JSON.parse(localStorage.getItem(lsKey(SLS))||"null");return o&&o.day===todayStr()&&o.L&&o.plan?o:null;}catch(e){return null;}}
+function clearSession(){try{localStorage.removeItem(lsKey(SLS));}catch(e){}}
 function resumeSession(){
   const o=loadSession();if(!o){go("home");return;}
   SS={L:o.L,plan:o.plan,step:o.step,start:Date.now()-o.elapsed,xp:o.xp||0,fixes:o.fixes||[],timeUpShown:o.elapsed>=600000,sub:{},reviewed:o.reviewed};
@@ -606,13 +649,13 @@ function isUnlocked(sc){return !sc.unlock||(S.bestStreak||0)>=sc.unlock;}
 /* ---------- views ---------- */
 let view=S.level!==null?"home":"welcome";
 function go(v){view=v;render();window.scrollTo(0,0);navSync();}
-function render(){stopListen();({practice:vPractice,pmode:()=>{},topics:vTopics,grammarlist:vGrammarList,welcome:vWelcome,onboard:vOnboard,test:vTest,free:vFree,result:vResult,home:vHome,loading:vLoading,session:vSession,scenarios:vScenarios,roleplay:vRoleplay,words:vWords,settings:vSettings,summary:vSummary,exam:vExam,examResult:vExamResult}[view]||vHome)();}
+function render(){stopListen();({langs:vLangs,levelpick:vLevelPick,practice:vPractice,pmode:()=>{},topics:vTopics,grammarlist:vGrammarList,welcome:vWelcome,onboard:vOnboard,test:vTest,free:vFree,result:vResult,home:vHome,loading:vLoading,session:vSession,scenarios:vScenarios,roleplay:vRoleplay,words:vWords,settings:vSettings,summary:vSummary,exam:vExam,examResult:vExamResult}[view]||vHome)();}
 
 function vWelcome(){
-  app.innerHTML=`<div class="metro" aria-hidden="true" style="margin-top:20px"><div class="track"></div><div class="fill" style="width:0"></div>
+  app.innerHTML=`<div class="top"><button class="iconbtn langbtn" data-act="go" data-v="langs" aria-label="Nyelv választása">${LG().flag}</button><span></span></div><div class="metro" aria-hidden="true" style="margin-top:4px"><div class="track"></div><div class="fill" style="width:0"></div>
    <div class="stations">${LEVELS.map(l=>`<div class="st"><span class="dot"></span><span class="lbl">${l}</span></div>`).join("")}</div></div>
-  <div style="margin:38px 0 10px"><h1>Beszélj!</h1><p style="font-size:1.2rem;margin-top:10px">Napi 10 perc angol, ami tényleg megszólal. Szavak, fülelés, változatos feladatok és szerepjáték AI-szereplőkkel, akikkel beszélgethetsz.</p></div>
-  <div class="panel"><h3>Így működik</h3><p>1. Rövid szintfelmérő (kb. 4 perc).</p><p>2. Minden nap egy új, a szintedre szabott 10 perces lecke.</p><p>3. A végén mindig beszélsz: egy barista, egy detektívtörténet komornyikja, vagy Emma, az angol barátod, aki emlékszik rád.</p></div>
+  <div style="margin:38px 0 10px"><h1>Beszélj!</h1><p style="font-size:1.2rem;margin-top:10px">${LG().flag} Napi 10 perc ${LG().adj}, ami tényleg megszólal. Szavak, fülelés, változatos feladatok és szerepjáték AI-szereplőkkel, akikkel beszélgethetsz.</p></div>
+  <div class="panel"><h3>Így működik</h3><p>1. Rövid szintfelmérő (kb. 4 perc).</p><p>2. Minden nap egy új, a szintedre szabott 10 perces lecke.</p><p>3. A végén mindig beszélsz: egy barista, egy detektívtörténet komornyikja, vagy ${LG().buddy.name}, ${az(LG().adj)} barátod, aki emlékszik rád.</p></div>
   <button class="btn big sun" data-act="start">Kezdjük</button>`;
 }
 let ob={name:"",interests:[]};
@@ -627,11 +670,18 @@ function vOnboard(){
 }
 /* placement test */
 let T=null;
-function startTest(){T={ability:1.5,used:new Set(),n:0,total:10,item:null,answered:false,correct:0};nextItem();go("test");}
+function startTest(){
+  T={ability:1.5,used:new Set(),n:0,total:10,item:null,answered:false,correct:0,bank:isEN()?TEST:null};
+  if(isEN()){nextItem();go("test");return;}
+  if(!ai()){go("levelpick");return;}
+  go("loading");
+  genBank([0,1,2,3,4].map(l=>({l,n:3}))).then(b=>{T.bank=b;T.total=Math.min(10,b.length);nextItem();go("test");}).catch(e=>{toast(aiErr(e)+" Válaszd ki a szinted kézzel.",4000);go("levelpick");});
+}
 function nextItem(){
   const target=Math.max(0,Math.min(4,Math.round(T.ability)));
-  let pool=TEST.map((t,i)=>({t,i})).filter(x=>!T.used.has(x.i)&&x.t.l===target);
-  if(!pool.length)pool=TEST.map((t,i)=>({t,i})).filter(x=>!T.used.has(x.i)).sort((a,b)=>Math.abs(a.t.l-target)-Math.abs(b.t.l-target)).slice(0,3);
+  const BK=T.bank||TEST;
+  let pool=BK.map((t,i)=>({t,i})).filter(x=>!T.used.has(x.i)&&x.t.l===target);
+  if(!pool.length)pool=BK.map((t,i)=>({t,i})).filter(x=>!T.used.has(x.i)).sort((a,b)=>Math.abs(a.t.l-target)-Math.abs(b.t.l-target)).slice(0,3);
   const pick=pool[Math.floor(Math.random()*pool.length)];T.used.add(pick.i);
   T.item={...pick.t,opts:shuffle(pick.t.o),correct:pick.t.o[0]};T.answered=false;
 }
@@ -655,10 +705,10 @@ function testAnswer(i,btn){
 }
 function vFree(){
   const canAI=ai();
-  app.innerHTML=`<p class="stepname">Szintfelmérő · utolsó lépés</p><h2>Mesélj magadról angolul</h2>
+  app.innerHTML=`<p class="stepname">Szintfelmérő · utolsó lépés</p><h2>Mesélj magadról ${TLHU()}</h2>
   <p>2–3 mondat elég: ki vagy, mivel foglalkozol, mit szeretsz csinálni. Mondd a mikrofonba vagy írd be.</p>
   <button class="mic" id="mic" aria-label="Felvétel">🎤</button><p class="center muted" id="micinfo">${srBroken?"Írd be a szövegmezőbe (vagy diktáld a billentyűzettel).":"Koppints a mikrofonra és beszélj"}</p>
-  <textarea id="free" placeholder="Hi! My name is..."></textarea>
+  <textarea id="free" placeholder="${esc(LG().buddy.hi.split("!")[0])}! …"></textarea>
   ${canAI?"":`<p class="banner">Az AI-értékeléshez ChatGPT-kulcs kell. Most a teszt eredménye alapján sorollak be, a kulcsot később a ⚙️ Beállításokban adhatod meg.</p>`}
   <div class="foot" style="display:grid;gap:10px"><button class="btn big" data-act="eval" ${canAI?"":"disabled"}>Értékelés</button><button class="link" data-act="skip-free">Kihagyom, mutasd az eredményt</button></div>`;
   wireMic(document.getElementById("mic"),document.getElementById("free"),document.getElementById("micinfo"));
@@ -670,7 +720,7 @@ async function evalFree(){
   const b=document.querySelector('[data-act="eval"]');b.disabled=true;b.textContent="Értékelem…";
   try{
     clearDraft("placement");
-    const r=await ask(`Assess the English level of a Hungarian learner. Their multiple-choice placement test suggested ${LEVELS[T.testLevel]}. Their short self-introduction (may come from speech recognition; ignore punctuation):\n"""${txt}"""\nReply with ONLY JSON: {"level":"A1|A2|B1|B2|C1","feedback_hu":"2 warm, specific Hungarian sentences about what they do well","focus_hu":["2-3 short Hungarian phrases naming what to practise next"],"corrected":"a corrected, natural version of their text written ENTIRELY in English (translate any Hungarian words they used)"}`,{modelTier:"quick"});
+    const r=await ask(`${LANGNOTE()}Assess the ${TL()} level of a Hungarian learner. Their multiple-choice placement test suggested ${LEVELS[T.testLevel]}. Their short self-introduction (may come from speech recognition; ignore punctuation):\n"""${txt}"""\nReply with ONLY JSON: {"level":"A1|A2|B1|B2|C1","feedback_hu":"2 warm, specific Hungarian sentences about what they do well","focus_hu":["2-3 short Hungarian phrases naming what to practise next"],"corrected":"a corrected, natural version of their text written ENTIRELY in ${TL()} (translate any Hungarian words they used)"}`,{modelTier:"quick"});
     const m=LEVELS.indexOf(r.level),fin=m<0?T.testLevel:Math.round((2*T.testLevel+m)/3);
     T.result={level:fin,feedback:r.feedback_hu||"",focus:Array.isArray(r.focus_hu)?r.focus_hu.slice(0,3):[],corrected:r.corrected||""};
   }catch(e){toast(aiErr(e));T.result={level:T.testLevel,feedback:"",focus:[],corrected:""};}
@@ -687,13 +737,13 @@ function vResult(){
 function finishOnboard(){S.name=ob.name.trim()||S.name||"";S.interests=ob.interests.length?ob.interests:S.interests;S.level=T.result.level;S.focus=T.result.focus;S.levelNote=T.result.feedback;save();go("home");}
 
 /* home */
-function scRow(sc){const lock=!isUnlocked(sc);return `<button class="rowbtn ${lock?"locked":""}" data-act="scenario" data-id="${sc.id}"><span class="em">${lock?"🔒":sc.emoji}</span><span><b>${esc(lock?"Titkos jelenet":sc.title_hu)}</b><small>${lock?`${sc.unlock} napos sorozatnál nyílik meg`:esc(sc.sub)}</small></span></button>`;}
+function scRow(sc0){const sc=scView(sc0);const lock=!isUnlocked(sc);return `<button class="rowbtn ${lock?"locked":""}" data-act="scenario" data-id="${sc.id}"><span class="em">${lock?"🔒":sc.emoji}</span><span><b>${esc(lock?"Titkos jelenet":sc.title_hu)}</b><small>${lock?`${sc.unlock} napos sorozatnál nyílik meg`:esc(sc.sub)}</small></span></button>`;}
 function vHome(){
   const lv=S.level??0,pct=lv/4*100,doneToday=S.lastDay===todayStr();
   const due=dueWords().length;
   const toExam=Math.max(0,(S.nextExamAt||10)-S.sessions);
   const keyBanner=ai()||sample===undefined?"":`<p class="banner">Az AI-funkciókhoz (beszélgetés, személyre szabott lecke) add meg a ChatGPT-kulcsodat a ⚙️ Beállításokban. Addig az alap leckét kapod.</p>`;
-  app.innerHTML=`<div class="top"><div></div><div style="display:flex;gap:8px"><button class="iconbtn" data-act="go" data-v="grammarlist" aria-label="Nyelvtani kisokos">📐</button><button class="iconbtn" data-act="go" data-v="topics" aria-label="Témaszótár">🗂️</button><button class="iconbtn" data-act="go" data-v="words" aria-label="Szókincstár">📚</button><button class="iconbtn" data-act="go" data-v="settings" aria-label="Beállítások">⚙️</button></div></div>
+  app.innerHTML=`<div class="top"><button class="iconbtn langbtn" data-act="go" data-v="langs" aria-label="Nyelv: ${LG().name}">${LG().flag}</button><div style="display:flex;gap:8px"><button class="iconbtn" data-act="go" data-v="grammarlist" aria-label="Nyelvtani kisokos">📐</button><button class="iconbtn" data-act="go" data-v="topics" aria-label="Témaszótár">🗂️</button><button class="iconbtn" data-act="go" data-v="words" aria-label="Szókincstár">📚</button><button class="iconbtn" data-act="go" data-v="settings" aria-label="Beállítások">⚙️</button></div></div>
   <h1 class="hello">${S.name?`Szia, ${esc(S.name)}!`:"Szia!"}</h1>
   <p class="muted">${doneToday?"A mai 10 perc megvan. Szép munka!":"Ma még vár rád a napi 10 perc."}</p>
   <div class="metro" aria-label="Szinted: ${LEVELS[lv]}"><div class="track"></div><div class="fill" style="width:calc((100% - 36px) * ${pct/100})"></div>
@@ -702,14 +752,14 @@ function vHome(){
   ${lv<4?`<p class="muted center" style="font-size:.88rem;margin-top:4px">🚉 Következő átszállás (szintlépő vizsga): ${S.examDue?"<b>most elérhető!</b>":toExam+" lecke múlva"}</p>`:""}
   <div class="stats"><div class="stat"><b>${S.streak}🔥</b><span>nap sorozat</span></div><div class="stat"><b>${S.xp}</b><span>XP</span></div><div class="stat"><b>${S.words.length}</b><span>szó${due?` · ${due} ismétlendő`:""}</span></div></div>
   ${keyBanner}
-  ${S.examDue&&lv<4?`<div class="panel examcard"><h3>🚉 Átszállás! Szintlépő vizsga</h3><p>8 kérdés. Ha legalább 6 jó, átszállsz a(z) <b>${LEVELS[lv+1]}</b> vonalra.</p><button class="btn big" data-act="exam" style="margin-top:10px">Vizsga indítása</button></div>`:""}
+  ${S.examDue&&lv<4?`<div class="panel examcard"><h3>🚉 Átszállás! Szintlépő vizsga</h3><p>8 kérdés. Ha legalább 6 jó, átszállsz ${(/^A/.test(LEVELS[lv+1])?"az":"a")} <b>${LEVELS[lv+1]}</b> vonalra.</p><button class="btn big" data-act="exam" style="margin-top:10px">Vizsga indítása</button></div>`:""}
   ${(()=>{const o=loadSession();return o?`<div class="panel examcard"><h3>⏸️ Félbehagyott lecke</h3><p>${esc(o.L.emoji||"")} ${esc(o.L.theme_hu||"")} · ${o.step+1}. lépés: ${STEP_LABEL[o.plan[o.step]]}</p><button class="btn big sun" data-act="resume" style="margin-top:10px">Folytatás</button><div class="center"><button class="link" data-act="discard">Elvetem</button></div></div>`:"";})()}
   <div class="today"><p>${doneToday?"Kérsz még egy kört?":"Mai megálló"} · ${S.sessions+1}. lecke</p><h2>${doneToday?"Bónusz lecke":"Napi 10 perc"}</h2>
    <div class="steps">${due>=2?`<span>🔁 ${Math.min(6,due)} régi szó</span>`:""}<span>🧩 Szópárbaj</span><span>📐 Nyelvtan</span><span>👂 Fülelő</span><span>🎲 Változó feladat</span><span>🗣️ Beszéd</span><span>🎭 Szerepjáték</span></div>
    <button class="btn big sun" data-act="session">Indulás</button></div>
   <h3 style="margin:22px 0 10px">Beszélgess</h3>
   <div class="rowlist"><button class="rowbtn practice" data-act="go" data-v="practice"><span class="em">🎯</span><span><b>Gyakorlóterem</b><small>Játékos gyakorlás a tanult szavaiddal és nyelvtanoddal${due?` · ${due} szó esedékes`:""}</small></span></button>
-   <button class="rowbtn buddy" data-act="buddy"><span class="em">☕</span><span><b>Csevegés Emmával</b><small>Angol barátod, aki emlékszik rád${S.buddyFacts.length?` · ${S.buddyFacts.length} dolgot tud rólad`:""}</small></span></button>
+   <button class="rowbtn buddy" data-act="buddy"><span class="em">☕</span><span><b>Csevegés ${LG().buddy.with}</b><small>${LG().adj.charAt(0).toUpperCase()+LG().adj.slice(1)} barátod, aki emlékszik rád${S.buddyFacts.length?` · ${S.buddyFacts.length} dolgot tud rólad`:""}</small></span></button>
    ${SCENARIOS.filter(s=>s.group==="meet").slice(0,2).map(scRow).join("")}
    <button class="rowbtn" data-act="go" data-v="scenarios"><span class="em">🎭</span><span><b>Összes jelenet</b><small>Ismerkedés, helyzetek és titkos jelenetek</small></span></button></div>`;
 }
@@ -728,18 +778,18 @@ const YLOCAL=["shadow","tongue","question"],YAI=["picture","solo","voicemail","q
 const SCHEMA={
  scramble:`"scramble":[{"en":"sentence of 4-9 words without commas","hu":"Hungarian translation"}] (exactly 3)`,
  errors:`"errors":[{"wrong":"sentence with exactly ONE typical learner mistake","correct":"the corrected sentence","hint_hu":"very short Hungarian explanation"}] (exactly 3)`,
- translate:`"translate":[{"hu":"short everyday Hungarian sentence","en":"natural English translation"}] (exactly 3)`,
- cloze:`"cloze":[{"sentence":"English sentence where ONE of today's words is replaced by ___","answer":"the missing word or phrase exactly","hu":"Hungarian translation of the full sentence"}] (exactly 3)`,
+ translate:`"translate":[{"hu":"short everyday Hungarian sentence","en":"natural ${TL()} translation"}] (exactly 3)`,
+ cloze:`"cloze":[{"sentence":"${TL()} sentence where ONE of today's words is replaced by ___","answer":"the missing word or phrase exactly","hu":"Hungarian translation of the full sentence"}] (exactly 3)`,
  story:`"story":{"en":"a lively 4-5 sentence spoken mini-story on the theme","hu":"its Hungarian translation","statements":[{"hu":"Hungarian statement about a detail of the story","true":true}]} (exactly 4 statements, mix true and false)`,
  dialogue:`"dialogue":{"title_hu":"short Hungarian title","lines":[{"who":"A or B","en":"line","hu":"Hungarian translation"}]} (5-6 lines in the correct order, each line clearly follows the previous one)`,
- oddone:`"oddone":[{"words":["four English words, three of which belong together"],"odd":"the odd one (exactly as in words)","why_hu":"short Hungarian reason"}] (exactly 3)`,
- react:`"react":[{"situation_hu":"short everyday situation in Hungarian (what happens / what you want)","options":["MOST natural English reply","grammatical but unnatural or impolite reply","wrong reply","wrong reply"],"why_hu":"short Hungarian explanation"}] (exactly 3)`,
- tongue:`"tongue":[{"en":"short English tongue twister practising a sound hard for Hungarians","hu":"Hungarian meaning","sound":"the sound, e.g. th, w/v, short vs long i"}] (exactly 2)`,
- question:`"question":[{"answer":"English answer sentence about everyday life on the theme","q":"the natural English question that leads to this answer","hint_hu":"what to ask about, in Hungarian"}] (exactly 3)`,
+ oddone:`"oddone":[{"words":["four ${TL()} words, three of which belong together"],"odd":"the odd one (exactly as in words)","why_hu":"short Hungarian reason"}] (exactly 3)`,
+ react:`"react":[{"situation_hu":"short everyday situation in Hungarian (what happens / what you want)","options":["MOST natural ${TL()} reply","grammatical but unnatural or impolite reply","wrong reply","wrong reply"],"why_hu":"short Hungarian explanation"}] (exactly 3)`,
+ tongue:`"tongue":[{"en":"short ${TL()} tongue twister practising a sound hard for Hungarians","hu":"Hungarian meaning","sound":"the sound or sound pair being practised"}] (exactly 2)`,
+ question:`"question":[{"answer":"${TL()} answer sentence about everyday life on the theme","q":"the natural ${TL()} question that leads to this answer","hint_hu":"what to ask about, in Hungarian"}] (exactly 3)`,
  picture:`"picture":{"emoji":"4-6 emoji that together form a little scene","scene_hu":"one Hungarian sentence describing that scene"}`,
  solo:`"solo":{"topic_en":"an open question to talk about for one minute","topic_hu":"Hungarian translation","ideas_hu":["3 short Hungarian idea prompts"]}`,
  voicemail:`"voicemail":{"situation_hu":"in Hungarian: who you call and why (on the theme)","must_hu":["3 things the message must mention, in Hungarian"]}`,
- quickq:`"quickq":["3 short, friendly personal questions in English on the theme, at the learner's level"]`
+ quickq:`"quickq":["3 short, friendly personal questions in ${TL()} on the theme, at the learner's level"]`
 };
 const VALID={
  scramble:L=>Array.isArray(L.scramble)&&(L.scramble=L.scramble.filter(x=>x&&x.en&&x.hu).slice(0,3)).length>=2,
@@ -778,7 +828,9 @@ function prepLesson(L,GT){
   if(L.dialogue&&Array.isArray(L.dialogue.lines)){const n=Math.min(6,L.dialogue.lines.length);let o;do{o=shuffle([...Array(n).keys()]);}while(n>1&&o.every((v,i)=>v===i));L.dialogue.order=o;}
 }
 async function startSession(){
+  if(!isEN()&&!ai()){toast("Ennél a nyelvnél a leckékhez ChatGPT-kulcs kell (⚙️ Beállítások).",4000);return;}
   clearSession();go("loading");
+  if(!isEN())await ensureCurriculum();
   const GT=nextGrammar(),pair=choosePair();
   const lv=S.level??1;let L=null;
   if(ai()){
@@ -787,7 +839,7 @@ async function startSession(){
       const weak=S.words.filter(w=>w.miss>0).sort((a,b)=>b.miss-a.miss).slice(0,6).map(w=>w.en).join(", ")||"none";
       const mist=S.mistakes.slice(-5).map(m=>`"${m.you}" -> "${m.better}"`).join("; ")||"none yet";
       const extra=[pair.x,pair.y].filter(t=>SCHEMA[t]).map(t=>SCHEMA[t]);
-      L=await ask(`You design a fun 10-minute English micro-lesson for a Hungarian adult learner.
+      L=await ask(`${LANGNOTE()}You design a fun 10-minute ${TL()} micro-lesson for a Hungarian adult learner.
 Level: ${LEVELS[lv]} (CEFR). ${LEVEL_GUIDE[lv]}
 Interests: ${S.interests.join(", ")||"everyday life"}. Things to practise: ${(S.focus||[]).join("; ")||"general"}.
 Lesson number: ${S.sessions+1}. Date: ${todayStr()}.
@@ -801,11 +853,12 @@ Reply with ONLY one JSON object with these keys:
 "theme_en","theme_hu","emoji" (one emoji),
 "words":[{"en":"NEW word or short phrase, NOT in the known list","hu":"Hungarian meaning","example":"short example sentence","example_hu":"Hungarian translation of the example"}] (exactly 9, all genuinely new for the learner),
 "listening":[{"en":"natural spoken sentence using today's words, containing a concrete detail (number, time, place, person, negation or tense)","hu_options":["CORRECT Hungarian meaning","tricky distractor","tricky distractor","tricky distractor"]}] (exactly 4, first option always correct). The distractors MUST be almost identical to the correct translation: same words, same structure, similar length, differing in exactly ONE detail the learner must actually hear: a number or time (e.g. fifteen vs fifty), negation, tense (past vs present vs future), who does it (I/you/she/they), a place or object, or a similar-sounding English word. Never use unrelated sentences. Exactly one option may be correct.,
-"grammar":{"topic":"${GT.topic}","topic_en":"English name of the grammar point","explain_hu":"clear, simple Hungarian explanation in 3-4 short sentences, compare with Hungarian where it helps","pattern":"short formula, e.g. have/has + 3. alak","examples":[{"en":"example sentence on today's theme","hu":"Hungarian translation"}],"practice":[{"q":"sentence with ___ for the gap","options":["CORRECT","wrong","wrong","wrong"],"why_hu":"very short Hungarian explanation"}]} (3 examples, 4 practice items, first option always correct),
-${extra.join(",\n")}${extra.length?",\n":""}"roleplay":{"title_hu":"short catchy Hungarian title","setting":"one sentence in English","character":"name and role with a quirky personality trait","goal_hu":"the learner's mission in Hungarian","tasks_hu":["3 things the LEARNER must say or ask, in Hungarian imperative, e.g. Kérdezd meg..., Rendelj..., Mondd el..."],"opener":"the character's first line in English; it must NOT already do, ask or offer anything from the learner's tasks","opener_hu":"its Hungarian translation"}`);
+"grammar":{"topic":"${GT.topic}","topic_en":"${TL()} or international name of the grammar point","explain_hu":"clear, simple Hungarian explanation in 3-4 short sentences, compare with Hungarian where it helps","pattern":"short formula${isEN()?", e.g. have/has + 3. alak":""}","examples":[{"en":"example sentence on today's theme","hu":"Hungarian translation"}],"practice":[{"q":"sentence with ___ for the gap","options":["CORRECT","wrong","wrong","wrong"],"why_hu":"very short Hungarian explanation"}]} (3 examples, 4 practice items, first option always correct),
+${extra.join(",\n")}${extra.length?",\n":""}"roleplay":{"title_hu":"short catchy Hungarian title","setting":"one sentence in English describing a place in a ${TL()}-speaking country","character":"name and role with a quirky personality trait","goal_hu":"the learner's mission in Hungarian","tasks_hu":["3 things the LEARNER must say or ask, in Hungarian imperative, e.g. Kérdezd meg..., Rendelj..., Mondd el..."],"opener":"the character's first line in ${TL()}; it must NOT already do, ask or offer anything from the learner's tasks","opener_hu":"its Hungarian translation"}`);
       if(!validCore(L))L=null;
     }catch(e){L=null;if(e&&e.code!=="unavailable")toast(aiErr(e)+" Most az alap leckét kapod.",4000);}
   }
+  if(!L&&!isEN()){toast("Nem sikerült összeállítani a leckét. Próbáld újra.",4000);go("home");return;}
   if(!L)L=JSON.parse(JSON.stringify(FALLBACK));
   onlyNewWords(L);
   prepLesson(L,GT);
@@ -818,7 +871,7 @@ ${extra.join(",\n")}${extra.length?",\n":""}"roleplay":{"title_hu":"short catchy
   SS={L,plan:plan.concat(["listen",x,y,"roleplay"]),step:0,start:Date.now(),xp:0,fixes:[],timeUpShown:false,sub:{},reviewed:false};
   startClock();enterStep(0);
 }
-function wkey(w){return norm(w).replace(/^(to|a|an|the) /,"");}
+function wkey(w){return stripArt(norm(w));}
 function hkey(h){return String(h||"").toLowerCase().replace(/\([^)]*\)/g,"").replace(/[^a-záéíóöőúüű ]/g," ").replace(/\s+/g," ").trim();}
 function onlyNewWords(L){
   const known=new Set(S.words.map(w=>wkey(w.en)).concat(S.seenNew||[]));
@@ -826,7 +879,7 @@ function onlyNewWords(L){
   const seen=new Set();
   let fresh=(L.words||[]).filter(w=>{const k=wkey(w.en);if(!k||known.has(k)||seen.has(k)||knownHu.has(hkey(w.hu)))return false;seen.add(k);return true;});
   if(fresh.length<6){
-    const pool=[];TOPICS.forEach(c=>c.items.forEach(t=>t.words.forEach(w=>{const k=wkey(w.en);if(!known.has(k)&&!seen.has(k)&&!knownHu.has(hkey(w.hu)))pool.push(w);})));
+    const pool=[];bankWords().forEach(w=>{const k=wkey(w.en);if(!known.has(k)&&!seen.has(k)&&!knownHu.has(hkey(w.hu)))pool.push(w);});
     const lv=S.level??1;
     shuffle(pool).slice(0,6-fresh.length).forEach(w=>{seen.add(wkey(w.en));fresh.push({en:w.en,hu:w.hu,example:"",example_hu:""});});
   }
@@ -866,7 +919,7 @@ function vSession(){
 /* match */
 function stepMatch(){
   const s=SS.sub,rev=s.mode==="review";
-  app.innerHTML=sessHead()+`${rev?`<div class="revbanner">🔁 Régi szavak ismétlése</div><p class="muted">Ezeket korábban tanultad, és most esedékes felidézni őket. Párosítsd az angol szót a jelentésével! Amit eltévesztesz, holnap újra jön.</p>`:`<h2>${SS.L.review&&SS.L.review.length?"🆕 Mai új szavak":"Párosítsd a szavakat"}</h2><p class="muted">Koppints egy angol szóra, majd a jelentésére.</p>`}
+  app.innerHTML=sessHead()+`${rev?`<div class="revbanner">🔁 Régi szavak ismétlése</div><p class="muted">Ezeket korábban tanultad, és most esedékes felidézni őket. Párosítsd ${az(LG().adj)} szót a jelentésével! Amit eltévesztesz, holnap újra jön.</p>`:`<h2>${SS.L.review&&SS.L.review.length?"🆕 Mai új szavak":"Párosítsd a szavakat"}</h2><p class="muted">Koppints egy angol szóra, majd a jelentésére.</p>`}
   <div class="grid2"><div style="display:grid;gap:10px">${s.left.map(p=>`<button class="tile ${s.done.has(p.id)?"gone":""}" data-act="m" data-side="l" data-id="${p.id}">${esc(p.en)}</button>`).join("")}</div>
   <div style="display:grid;gap:10px">${s.right.map(p=>`<button class="tile ${s.done.has(p.id)?"gone":""}" data-act="m" data-side="r" data-id="${p.id}">${esc(p.hu)}</button>`).join("")}</div></div>
   ${rev?"":`<div class="panel" style="margin-top:18px"><h3>Mai szavak példamondatai</h3>${SS.L.words.map(w=>`<p><button class="mini" data-act="say" data-t="${esc(w.example||w.en)}" aria-label="Felolvasás">🔊</button> ${esc(w.example||w.en)}${w.example_hu?`<br><span class="muted exhu">${esc(w.example_hu)}</span>`:""}</p>`).join("")}</div>`}`;
@@ -897,13 +950,13 @@ function matchDone(){
   if(s.missIds.size)note("🧩 Szavak","",s.pairs.filter(p=>s.missIds.has(p.id)).map(p=>p.en+" = "+p.hu).join(" · "),"Ezeket keverted össze a szópárbajban.");
   nextStep();
 }
-function huWordsHtml(r){const a=Array.isArray(r&&r.hu_words)?r.hu_words.filter(x=>x&&x.hu&&x.en):[];return a.length?`<div class="huw"><b>🇭🇺→🇬🇧 Így mondd angolul:</b>${a.map(x=>`<p>${esc(x.hu)} = <b>${esc(x.en)}</b> <button class="mini" data-act="say" data-t="${esc(x.en)}">🔊</button></p>`).join("")}</div>`:"";}
-function huWordsNote(tag,r){const a=Array.isArray(r&&r.hu_words)?r.hu_words.filter(x=>x&&x.hu&&x.en):[];if(a.length)note(tag,"",a.map(x=>x.hu+" = "+x.en).join(" · "),"Ezeket magyarul mondtad, legközelebb próbáld angolul!");}
+function huWordsHtml(r){const a=Array.isArray(r&&r.hu_words)?r.hu_words.filter(x=>x&&x.hu&&x.en):[];return a.length?`<div class="huw"><b>🇭🇺→${LG().flag} Így mondd ${TLHU()}:</b>${a.map(x=>`<p>${esc(x.hu)} = <b>${esc(x.en)}</b> <button class="mini" data-act="say" data-t="${esc(x.en)}">🔊</button></p>`).join("")}</div>`:"";}
+function huWordsNote(tag,r){const a=Array.isArray(r&&r.hu_words)?r.hu_words.filter(x=>x&&x.hu&&x.en):[];if(a.length)note(tag,"",a.map(x=>x.hu+" = "+x.en).join(" · "),"Ezeket magyarul mondtad, legközelebb próbáld "+TLHU()+"!");}
 function note(tag,you,better,why){if(!SS||SS.review)return;SS.fixes.push({tag,you:you||"",better:better||"",why:why||""});}
 /* recall review */
 function lev(a,b){const m=a.length,n=b.length,d=Array.from({length:m+1},(_,i)=>[i].concat(new Array(n).fill(0)));for(let j=1;j<=n;j++)d[0][j]=j;for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n];}
 function recallMatch(got,want){
-  const g=norm(got).replace(/^(to|a|an|the) /,""),w=norm(want).replace(/^(to|a|an|the) /,"");
+  const g=stripArt(norm(got)),w=stripArt(norm(want));
   if(!g)return 0;if(g===w)return 2;
   if(w.length>=5&&lev(g,w)<=1)return 1;
   return 0;
@@ -913,10 +966,10 @@ function stepRecall(){
   const s=SS.sub,list=SS.L.review,it=list[s.i];
   if(s.hint==null)s.hint=0;
   app.innerHTML=sessHead()+`<div class="revbanner">🔁 Régi szavak ismétlése</div>
-  <p class="muted">${s.i+1}/${list.length} · Ezt korábban tanultad. Hogy mondod angolul? Mondd ki vagy írd be.</p>
+  <p class="muted">${s.i+1}/${list.length} · Ezt korábban tanultad. Hogy mondod ${TLHU()}? Mondd ki vagy írd be.</p>
   <div class="recallword">${esc(it.hu)}</div>
   ${s.hint?`<div class="hintline">${esc(hintText(it.en,s.hint))}</div>`:""}
-  ${s.checked?"":`<button class="mic" id="rvmic" aria-label="Felvétel">🎤</button><p class="center muted" id="rvinfo" style="font-size:.9rem">Koppints a mikrofonra és mondd angolul</p>
+  ${s.checked?"":`<button class="mic" id="rvmic" aria-label="Felvétel">🎤</button><p class="center muted" id="rvinfo" style="font-size:.9rem">Koppints a mikrofonra és mondd ${TLHU()}</p>
   <input type="text" id="rvin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="…vagy írd be ide">`}
   <div id="fb">${s.fbHtml||""}</div>
   <div class="foot" id="ft">${s.checked?`<button class="btn big" data-act="rvnext">Tovább</button>`:`<button class="btn big" data-act="rvcheck">Ellenőrzés</button>
@@ -927,12 +980,12 @@ function stepRecall(){
       if(activeRec){stopListen();return;}
       if(srBroken){toast(MIC_FALLBACK,5000);inp.focus();return;}
       mic.classList.add("live");document.getElementById("rvinfo").textContent="Hallgatlak…";
-      listen(t=>{inp.value=t;},(err,txt)=>{mic.classList.remove("live");const i2=document.getElementById("rvinfo");if(i2)i2.textContent="Koppints a mikrofonra és mondd angolul";if(txt&&txt.trim())recallCheck(false);});
+      listen(t=>{inp.value=t;},(err,txt)=>{mic.classList.remove("live");const i2=document.getElementById("rvinfo");if(i2)i2.textContent="Koppints a mikrofonra és mondd "+TLHU();if(txt&&txt.trim())recallCheck(false);});
     });}
 }
 function recallCheck(giveUp){
   const s=SS.sub,it=SS.L.review[s.i],inp=document.getElementById("rvin"),got=giveUp?"":(inp?inp.value.trim():"");
-  if(!giveUp&&!got){toast("Mondd ki vagy írd be angolul, vagy kérj segítséget.");return;}
+  if(!giveUp&&!got){toast("Mondd ki vagy írd be "+TLHU()+", vagy kérj segítséget.");return;}
   const m=giveUp?0:recallMatch(got,it.en);
   s.checked=true;
   if(m>0&&!s.hint){markWord(it.en,true);SS.xp+=8;}
@@ -995,7 +1048,7 @@ function nextItem2(total){const s=SS.sub;s.answered=false;s.checked=false;s.i++;
 function stepScramble(){
   const s=SS.sub,it=SS.L.scramble[s.i];
   if(!s.pool){const t=toks(it.en);s.target=t.join(" ");s.pool=shuffle(t.map((x,k)=>({t:x,k})));s.ans=[];s.checked=false;}
-  app.innerHTML=sessHead()+`<h2>Rakd sorba</h2><p class="muted">${s.i+1}/${SS.L.scramble.length} · Építsd fel angolul:</p>
+  app.innerHTML=sessHead()+`<h2>Rakd sorba</h2><p class="muted">${s.i+1}/${SS.L.scramble.length} · Építsd fel ${TLHU()}:</p>
   <div class="reveal">${esc(it.hu)}</div>
   <div class="answer" aria-label="Válaszod">${s.ans.map(x=>`<button class="word" data-act="sa" data-k="${x.k}">${esc(x.t)}</button>`).join("")}</div>
   <div class="pool">${s.pool.filter(x=>!s.ans.includes(x)).map(x=>`<button class="word" data-act="sp" data-k="${x.k}">${esc(x.t)}</button>`).join("")}</div>
@@ -1007,7 +1060,7 @@ function stepDictation(){
   const s=SS.sub,items=SS.L.listening.slice(0,3),it=items[s.i].en;
   app.innerHTML=sessHead()+`<h2>Diktálás</h2><p class="muted">${s.i+1}/${items.length} · Hallgasd meg, és írd le pontosan, amit hallasz.</p>
   <div class="play"><button class="playbig" data-act="say" data-t="${esc(it)}" aria-label="Lejátszás">🔊</button><button class="btn ghost" data-act="say-slow" data-t="${esc(it)}">🐢 Lassan</button></div>
-  <input type="text" id="dict" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Írd ide angolul…" ${s.checked?"disabled":""}>
+  <input type="text" id="dict" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Írd ide ${TLHU()}…" ${s.checked?"disabled":""}>
   <div id="fb"></div><div class="foot" id="ft"><button class="btn big" data-act="dcheck">Ellenőrzés</button></div>`;
   bindDraft(document.getElementById("dict"),"di:"+dkey());
   setTimeout(()=>speak(it),300);
@@ -1032,7 +1085,7 @@ function stepErrors(){
 /* translate */
 function stepTranslate(){
   const s=SS.sub,it=SS.L.translate[s.i];
-  app.innerHTML=sessHead()+`<h2>Mondd angolul!</h2><p class="muted">${s.i+1}/${SS.L.translate.length} · Mondd ki vagy írd be angolul. Nem kell szó szerint.</p>
+  app.innerHTML=sessHead()+`<h2>Mondd ${TLHU()}!</h2><p class="muted">${s.i+1}/${SS.L.translate.length} · Mondd ki vagy írd be ${TLHU()}. Nem kell szó szerint.</p>
   <div class="reveal" style="font-size:1.25rem">${esc(it.hu)}</div>
   <button class="mic" id="tmic" aria-label="Felvétel">🎤</button><p class="center muted" id="tinfo" style="font-size:.9rem">Koppints a mikrofonra és beszélj</p>
   <input type="text" id="tin" autocomplete="off" placeholder="…vagy írd be ide">
@@ -1073,10 +1126,10 @@ function stepShadow(){
 /* picture + solo (AI feedback) */
 function stepSpeakEval(){
   const type=SS.plan[SS.step],L=SS.L,s=SS.sub;
-  const head=type==="voicemail"?`<h2>Hangposta 📞</h2><p class="muted">Senki nem veszi fel. Hagyj angolul hangüzenetet (kb. 30 másodperc).</p>
+  const head=type==="voicemail"?`<h2>Hangposta 📞</h2><p class="muted">Senki nem veszi fel. Hagyj ${TLHU()} hangüzenetet (kb. 30 másodperc).</p>
    <div class="reveal">${esc(L.voicemail.situation_hu)}</div>${(L.voicemail.must_hu||[]).length?`<div class="panel"><b>Ezeket mondd el:</b>${L.voicemail.must_hu.map(m=>`<p>• ${esc(m)}</p>`).join("")}</div>`:""}
    <p class="muted center">📞 Biip… Kezdheted!</p>`
-  :type==="picture"?`<h2>Mit látsz?</h2><p class="muted">Írd le angolul 2–4 mondatban, mi történik a képen. Beszélj vagy írj.</p>
+  :type==="picture"?`<h2>Mit látsz?</h2><p class="muted">Írd le ${TLHU()} 2–4 mondatban, mi történik a képen. Beszélj vagy írj.</p>
    <div class="emoji-scene" aria-label="Jelenet">${esc(L.picture.emoji)}</div><button class="link" data-act="hint">💡 Segítség</button><p id="hint" class="muted" hidden>${esc(L.picture.scene_hu)}</p>`
   :`<h2>Egyperces szóló</h2><p class="muted">Beszélj kb. egy percig erről a témáról. Nyugodtan tarts szünetet, és koppints újra a mikrofonra.</p>
    <div class="reveal" style="font-size:1.15rem">${esc(L.solo.topic_en)}<br><span class="muted" style="font-weight:400">${esc(L.solo.topic_hu||"")}</span></div>
@@ -1097,9 +1150,9 @@ async function evalSpeak(){
   const ft=document.getElementById("ft");ft.innerHTML=`<p class="center muted">Értékelem…</p>`;clearDraft("se:"+dkey());
   const lv=S.level??1;
   const ctx=type==="voicemail"?`left a voicemail. Situation: ${L.voicemail.situation_hu}. It had to mention: ${(L.voicemail.must_hu||[]).join("; ")}. Check whether all points were covered and whether it sounds like a natural voicemail.`
-  :type==="picture"?`described this little emoji scene in English. Scene: ${L.picture.emoji} (meaning: ${L.picture.scene_hu}).`:`spoke for about a minute answering: "${L.solo.topic_en}".`;
+  :type==="picture"?`described this little emoji scene in ${TL()}. Scene: ${L.picture.emoji} (meaning: ${L.picture.scene_hu}).`:`spoke for about a minute answering: "${L.solo.topic_en}".`;
   try{
-    const r=await ask(`A Hungarian learner (level ${LEVELS[lv]}) ${ctx}\nTheir text (may come from speech recognition; ignore punctuation and capitals):\n"""${txt}"""\nReply with ONLY JSON: {"score":1-5,"feedback_hu":"2 short, encouraging, specific Hungarian sentences","better":"an improved, natural ENGLISH version of their text at their level, max 70 words","hu_words":[{"hu":"Hungarian word they used","en":"English equivalent"}],"tip_hu":"one concrete Hungarian tip for next time"} IMPORTANT: "better" must be written ENTIRELY in English, even if the learner used Hungarian words; translate those words into English inside it. List every Hungarian word or phrase the learner used in "hu_words" with its English equivalent (empty array if none). Only feedback_hu, tip_hu and the "hu" fields are in Hungarian.`,{modelTier:"quick"});
+    const r=await ask(`${LANGNOTE()}A Hungarian learner of ${TL()} (level ${LEVELS[lv]}) ${ctx}\nTheir text (may come from speech recognition; ignore punctuation and capitals):\n"""${txt}"""\nReply with ONLY JSON: {"score":1-5,"feedback_hu":"2 short, encouraging, specific Hungarian sentences","better":"an improved, natural ${TL()} version of their text at their level, max 70 words","hu_words":[{"hu":"Hungarian word they used","en":"${TL()} equivalent"}],"tip_hu":"one concrete Hungarian tip for next time"} IMPORTANT: "better" must be written ENTIRELY in ${TL()}, even if the learner used Hungarian words; translate those words into ${TL()} inside it. List every Hungarian word or phrase the learner used in "hu_words" with its ${TL()} equivalent (empty array if none). Only feedback_hu, tip_hu and the "hu" fields are in Hungarian.`,{modelTier:"quick"});
     const sc=Math.max(1,Math.min(5,Math.round(+r.score||3)));SS.xp+=sc*4;if(r.better)note(type==="picture"?"🖼️ Képleírás":type==="voicemail"?"📞 Hangposta":"🎙️ Egyperces szóló","",r.better,r.tip_hu);
     document.getElementById("fb").innerHTML=`<div class="panel"><div class="stars">${"★".repeat(sc)}${"☆".repeat(5-sc)}</div><p>${esc(r.feedback_hu||"")}</p>
      ${r.better?`<p style="margin-top:10px"><b>Így még jobb:</b> ${esc(r.better)} <button class="mini" data-act="say" data-t="${esc(r.better)}">🔊</button></p>`:""}
@@ -1185,18 +1238,18 @@ function oddAnswer(i,btn){
 /* react */
 function stepReact(){
   const s=SS.sub,it=SS.L.react[s.i];
-  app.innerHTML=mcqBody("Mit mondanál?",`${s.i+1}/${SS.L.react.length} · Válaszd a legtermészetesebb angol mondatot.`,`<div class="reveal">${esc(it.situation_hu)}</div>`,it.opts,"rans");
+  app.innerHTML=mcqBody("Mit mondanál?",`${s.i+1}/${SS.L.react.length} · Válaszd a legtermészetesebb ${LG().adj} mondatot.`,`<div class="reveal">${esc(it.situation_hu)}</div>`,it.opts,"rans");
 }
 function reactAnswer(i,btn){
   const s=SS.sub;if(s.answered)return;s.answered=true;const it=SS.L.react[s.i],ok=it.opts[i]===it.correct;markOpts(btn,ok,it.correct);
   if(ok)SS.xp+=8;else note("💬 Mit mondanál?",it.opts[i],it.correct,it.why_hu);
-  mcqFeedback(ok,`${ok?"Pont így mondaná egy angol! 👌":"Természetesebb: <b>"+esc(it.correct)+"</b>"}${it.why_hu?`<br><span style="font-weight:400">${esc(it.why_hu)}</span>`:""}`,SS.L.react.length);
+  mcqFeedback(ok,`${ok?"Pont így mondaná egy "+LG().adj+"! 👌":"Természetesebb: <b>"+esc(it.correct)+"</b>"}${it.why_hu?`<br><span style="font-weight:400">${esc(it.why_hu)}</span>`:""}`,SS.L.react.length);
   speak(it.correct);
 }
 /* question */
 function stepQuestion(){
   const s=SS.sub,it=SS.L.question[s.i];
-  app.innerHTML=sessHead()+`<h2>Kérdezz rá!</h2><p class="muted">${s.i+1}/${SS.L.question.length} · Ez a válasz. Mi volt a kérdés? Mondd ki vagy írd be angolul.</p>
+  app.innerHTML=sessHead()+`<h2>Kérdezz rá!</h2><p class="muted">${s.i+1}/${SS.L.question.length} · Ez a válasz. Mi volt a kérdés? Mondd ki vagy írd be ${TLHU()}.</p>
   <div class="reveal" style="font-size:1.2rem">💬 ${esc(it.answer)}</div>${it.hint_hu?`<p class="muted exhu" style="margin-top:6px">Tipp: ${esc(it.hint_hu)}</p>`:""}
   <button class="mic" id="qmic" aria-label="Felvétel">🎤</button><p class="center muted" id="qinfo" style="font-size:.9rem">Koppints a mikrofonra és kérdezz</p>
   <input type="text" id="qin" autocomplete="off" placeholder="…vagy írd be ide">
@@ -1258,7 +1311,7 @@ async function quickqEval(){
   const s=SS.sub,qs=SS.L.quickq,lv=S.level??1;
   const ft=document.getElementById("ft");ft.innerHTML=`<p class="center muted">Értékelem…</p>`;
   try{
-    const r=await ask(`A Hungarian learner (level ${LEVELS[lv]}) answered quick spoken questions (speech recognition, ignore punctuation):\n${qs.map((q,k)=>`Q: ${q}\nA: ${s.answers[k]||"(no answer)"}`).join("\n")}\nReply with ONLY JSON: {"score":1-5,"feedback_hu":"2 short, encouraging, specific Hungarian sentences","better":"improved, natural ENGLISH versions of their answers, one per line, at their level","hu_words":[{"hu":"Hungarian word they used","en":"English equivalent"}],"tip_hu":"one concrete Hungarian tip"} IMPORTANT: "better" must be written ENTIRELY in English, even if the learner used Hungarian words; translate those words into English inside it. List every Hungarian word or phrase the learner used in "hu_words" with its English equivalent (empty array if none). Only feedback_hu, tip_hu and the "hu" fields are in Hungarian.`,{modelTier:"quick"});
+    const r=await ask(`${LANGNOTE()}A Hungarian learner of ${TL()} (level ${LEVELS[lv]}) answered quick spoken questions (speech recognition, ignore punctuation):\n${qs.map((q,k)=>`Q: ${q}\nA: ${s.answers[k]||"(no answer)"}`).join("\n")}\nReply with ONLY JSON: {"score":1-5,"feedback_hu":"2 short, encouraging, specific Hungarian sentences","better":"improved, natural ${TL()} versions of their answers, one per line, at their level","hu_words":[{"hu":"Hungarian word they used","en":"${TL()} equivalent"}],"tip_hu":"one concrete Hungarian tip"} IMPORTANT: "better" must be written ENTIRELY in ${TL()}, even if the learner used Hungarian words; translate those words into ${TL()} inside it. List every Hungarian word or phrase the learner used in "hu_words" with its ${TL()} equivalent (empty array if none). Only feedback_hu, tip_hu and the "hu" fields are in Hungarian.`,{modelTier:"quick"});
     const sc=Math.max(1,Math.min(5,Math.round(+r.score||3)));SS.xp+=sc*4;
     if(r.better)note("⚡ Gyorskérdések","",String(r.better),r.tip_hu);
     document.getElementById("fb").innerHTML=`<div class="panel"><div class="stars">${"★".repeat(sc)}${"☆".repeat(5-sc)}</div><p>${esc(r.feedback_hu||"")}</p>${r.better?`<p style="margin-top:10px;white-space:pre-line"><b>Így még jobb:</b>\n${esc(r.better)}</p>`:""}${huWordsHtml(r)}${r.tip_hu?`<p class="muted" style="margin-top:8px">💡 ${esc(r.tip_hu)}</p>`:""}</div>`;
@@ -1278,20 +1331,20 @@ function buddyPrompt(latest){
   const facts=S.buddyFacts.length?S.buddyFacts.map(f=>"- "+f).join("\n"):"nothing yet. Get to know them over time: name, where they live, job, hobbies, family, plans.";
   const log=S.buddyLog.length?S.buddyLog.join("\n"):"(this is your first chat)";
   const today=RP.turns.map(t=>(t.role==="me"?"Learner: ":"You: ")+t.text).join("\n");
-  return `You are ${BUDDY.character}. You are the learner's English-speaking friend inside a language-learning app. Chat like a real friend: casual, warm, curious; share small things from your own life too; ask one question at a time.
+  return `${LANGNOTE()}You are ${LG().buddy.character}. You are the learner's ${TL()}-speaking friend inside a language-learning app. You always speak ${TL()}. Chat like a real friend: casual, warm, curious; share small things from your own life too; ask one question at a time.
 Learner: ${S.name||"the learner"}, a Hungarian, level ${LEVELS[lv]}. ${LEVEL_GUIDE[lv]}
 What you remember about the learner from earlier chats:
 ${facts}
 The end of your previous chat:
 ${log}
-Rules: 1-3 sentences, under 45 words. Use your memories naturally (ask follow-up questions like "How did ... go?"), never list facts back. If the learner writes Hungarian, reply in simple English and give the English version as the correction.
+Rules: 1-3 sentences, under 45 words. Use your memories naturally (ask follow-up questions like "How did ... go?"), never list facts back. If the learner writes Hungarian, reply in simple ${TL()} and give the ${TL()} version as the correction.
 ${latest===null?`The learner has just opened the chat (date: ${todayStr()}). Greet them warmly. If you remember things about them, ask about something from last time; otherwise introduce yourself and ask their name.`:`Today's chat so far:\n${today}\nLearner's latest message: "${latest.replace(/"/g,"'")}"`}
-Reply with ONLY JSON: {"reply":"your message","reply_hu":"Hungarian translation","correction":null or {"better":"natural corrected version of the learner's latest message","why_hu":"very short Hungarian explanation"},"suggestions":["two short possible learner replies at their level"],"new_facts":["short English facts the learner revealed about themselves in their latest message, e.g. 'has a dog called Max'; empty array if none"]}
+Reply with ONLY JSON: {"reply":"your message","reply_hu":"Hungarian translation","correction":null or {"better":"natural corrected version of the learner's latest message","why_hu":"very short Hungarian explanation"},"suggestions":["two short possible learner replies at their level"],"new_facts":["short facts (in English) the learner revealed about themselves in their latest message, e.g. 'has a dog called Max'; empty array if none"]}
 Give a correction only for a real mistake or clearly unnatural phrasing; otherwise null.`;
 }
 async function startBuddy(){
-  RP={sc:BUDDY,buddy:true,inSession:false,turns:[],done:new Set(),busy:true,finished:false,sugg:[]};go("roleplay");
-  const fallback=()=>{RP.turns.push({role:"them",text:"Hi! I'm Emma from Brighton. Nice to meet you! What's your name?",hu:"Szia! Emma vagyok Brightonból. Örülök, hogy megismerhetlek! Hogy hívnak?",showHu:false});};
+  RP={sc:buddySc(),buddy:true,inSession:false,turns:[],done:new Set(),busy:true,finished:false,sugg:[]};go("roleplay");
+  const fallback=()=>{RP.turns.push({role:"them",text:LG().buddy.hi,hu:LG().buddy.hi_hu,showHu:false});};
   if(!ai()){fallback();RP.busy=false;vRoleplay();return;}
   try{const r=await ask(buddyPrompt(null),{modelTier:"quick",cache:false});RP.turns.push({role:"them",text:String(r.reply||"Hi!"),hu:String(r.reply_hu||""),showHu:false});RP.sugg=Array.isArray(r.suggestions)?r.suggestions.slice(0,2).map(String):[];}
   catch(e){toast(aiErr(e));fallback();}
@@ -1300,7 +1353,7 @@ async function startBuddy(){
 function vRoleplay(){
   const sc=RP.sc;
   const head=RP.inSession?sessHead():`<div class="top"><button class="iconbtn" data-act="rpexit" aria-label="Vissza">←</button><b style="font-family:var(--display);font-size:1.1rem">${esc(sc.emoji||"🎭")} ${esc(sc.title_hu)}</b><span style="width:44px"></span></div>`;
-  const mission=RP.buddy?`<div class="mission"><b>☕ Emma, az angol barátod</b><br><span class="muted">Brightonból, szereti a kávét és Biscuit nevű macskáját. ${S.buddyFacts.length?`${S.buddyFacts.length} dologra emlékszik rólad.`:"Még most ismerkedtek."}</span></div>`
+  const mission=RP.buddy?`<div class="mission"><b>☕ ${LG().buddy.name}, ${az(LG().adj)} barátod</b><br><span class="muted">${LG().buddy.desc} ${S.buddyFacts.length?`${S.buddyFacts.length} dologra emlékszik rólad.`:"Még most ismerkedtek."}</span></div>`
   :`<div class="mission"><b>🎯 Küldetés:</b> ${esc(sc.goal_hu)}<br><span class="muted">Te beszélsz vele: ${esc(sc.character)}</span><ul>${sc.tasks_hu.map((t,i)=>`<li class="${RP.done.has(i)?"done":""}">${RP.done.has(i)?"✅":"⬜"} ${esc(t)}</li>`).join("")}</ul></div>`;
   app.innerHTML=`<div class="rp">${head}${mission}
   ${ai()?"":`<p class="banner">A beszélgetéshez add meg a ChatGPT-kulcsot a ⚙️ Beállításokban.</p>`}
@@ -1308,7 +1361,7 @@ function vRoleplay(){
   ${RP.finished?`<div class="banner">🎉 Küldetés teljesítve!</div><button class="btn big sun" data-act="rpend">${RP.inSession?"Lecke befejezése":"Kész"}</button>`:`
   ${RP.sugg.length&&!RP.busy?(RP.showSugg?`<div class="sugg"><span class="muted" style="font-size:.85rem;align-self:center">💡 Ötlet:</span>${RP.sugg.map((x,i)=>`<button data-act="sugg" data-i="${i}">${esc(x)}</button>`).join("")}</div>`:`<div class="sugg"><button data-act="showsugg">💡 Elakadtam, mutass ötletet</button></div>`):""}
   <div class="inputbar"><button class="roundbtn mic2" id="rmic" aria-label="Beszéd">🎤</button>
-   <input type="text" id="rin" placeholder="Beszélj vagy írj angolul…" autocomplete="off" ${ai()&&!RP.busy?"":"disabled"}>
+   <input type="text" id="rin" placeholder="Beszélj vagy írj ${TLHU()}…" autocomplete="off" ${ai()&&!RP.busy?"":"disabled"}>
    <button class="roundbtn send" data-act="rsend" aria-label="Küldés" ${ai()&&!RP.busy?"":"disabled"}>➤</button></div>
   <div class="center"><button class="link" data-act="${RP.inSession?"rpend":"rpexit"}">${RP.buddy?"Elköszönök 👋":RP.inSession?"Lecke befejezése most":"Kilépés"}</button></div>`}</div>`;
   const inp=document.getElementById("rin");
@@ -1319,7 +1372,7 @@ function vRoleplay(){
     if(activeRec){stopListen();return;}
     if(srBroken){toast(MIC_FALLBACK,5000);inp.focus();return;}
     mic.classList.add("live");inp.placeholder="Hallgatlak… ha befejezted, koppints a 🎤-re";
-    listen(t=>{inp.value=t;},(err,txt)=>{mic.classList.remove("live");inp.placeholder="Beszélj vagy írj angolul…";if(srBroken&&!txt){toast(MIC_FALLBACK,5000);return;}if(txt&&txt.trim())rpSend();});
+    listen(t=>{inp.value=t;},(err,txt)=>{mic.classList.remove("live");inp.placeholder="Beszélj vagy írj "+TLHU()+"…";if(srBroken&&!txt){toast(MIC_FALLBACK,5000);return;}if(txt&&txt.trim())rpSend();});
   });
   const chat=document.getElementById("chat");if(chat&&chat.lastElementChild&&RP.turns.length>1)chat.lastElementChild.scrollIntoView({block:"end"});
 }
@@ -1340,7 +1393,7 @@ async function rpSend(){
     const transcript=RP.turns.slice(0,-1).map(t=>(t.role==="me"?"Learner: ":"You: ")+t.text).join("\n");
     const myCount=RP.turns.filter(t=>t.role==="me").length;
     twist=RP.surprise&&!RP.surpriseUsed&&myCount===2;
-    prompt=`You are role-playing to help a Hungarian learner practise spoken English.
+    prompt=`${LANGNOTE()}You are role-playing to help a Hungarian learner practise spoken ${TL()}. You speak ONLY ${TL()}.${isEN()?"":` If the setting mentions an English-speaking place, move the scene to a typical ${TL()}-speaking city.`}
 Learner: ${S.name||"the learner"}, level ${LEVELS[lv]}. ${LEVEL_GUIDE[lv]}
 Scenario: ${sc.setting}
 You play: ${sc.character}. Stay in character, be warm and playful, react to what the learner actually says.
@@ -1351,8 +1404,8 @@ ROLE RULES (very important):
 - Example: if a task is "Kérdezd meg a Wi-Fi jelszót" (the learner should ask for the Wi-Fi password), do NOT say "Do you need the Wi-Fi password?" and do NOT tell it unprompted. Wait until the learner asks, then answer in character.
 - You may create natural openings (e.g. "Anything else?", "What can I do for you?", a short pause, a hint about the situation), but the learner must do each task in their own words.
 - A task counts as done ONLY if the LEARNER's own message did it. Your own lines never complete a task.
-Rules: replies are 1-3 sentences, under 40 words, end in a way that invites an answer and leaves room for the learner's open tasks. If the learner writes Hungarian, answer in simple English and give the English version as the correction. Messages may come from speech recognition, so ignore missing punctuation and capitals.
-${RP.words?`WORD MISSION: the learner must use these English words: ${RP.words.map(w=>w.en).join(", ")}. Steer the conversation so they get natural chances to use the ones not yet used (${RP.words.filter((w,i)=>!RP.done.has(i)).map(w=>w.en).join(", ")||"none"}), but never say those words yourself.\n`:""}${twist?"SURPRISE: in this reply, introduce a sudden, fun, unexpected twist in the scene (for example a phone rings, someone surprising walks in, the lights go out, an animal appears) and react to it in character. The learner must deal with it.\n":""}Conversation so far:
+Rules: replies are 1-3 sentences, under 40 words, end in a way that invites an answer and leaves room for the learner's open tasks. If the learner writes Hungarian, answer in simple ${TL()} and give the ${TL()} version as the correction. Messages may come from speech recognition, so ignore missing punctuation and capitals.
+${RP.words?`WORD MISSION: the learner must use these ${TL()} words: ${RP.words.map(w=>w.en).join(", ")}. Steer the conversation so they get natural chances to use the ones not yet used (${RP.words.filter((w,i)=>!RP.done.has(i)).map(w=>w.en).join(", ")||"none"}), but never say those words yourself.\n`:""}${twist?"SURPRISE: in this reply, introduce a sudden, fun, unexpected twist in the scene (for example a phone rings, someone surprising walks in, the lights go out, an animal appears) and react to it in character. The learner must deal with it.\n":""}Conversation so far:
 ${transcript}
 Learner's latest message: "${msg.replace(/"/g,"'")}"
 Reply with ONLY JSON: {"reply":"your in-character answer","reply_hu":"Hungarian translation","correction":null or {"better":"natural corrected version of the learner's latest message","why_hu":"very short Hungarian explanation"},"tasks_done":[indices of tasks the LEARNER has completed in their OWN messages so far],"suggestions":["two short possible next learner replies at their level"],"finished":true only when all tasks are done and the scene has a natural ending}
@@ -1370,7 +1423,7 @@ Give a correction only for a real mistake or clearly unnatural phrasing; otherwi
     if(RP.buddy){
       (Array.isArray(r.new_facts)?r.new_facts:[]).map(String).filter(f=>f.trim()).forEach(f=>{if(!S.buddyFacts.some(x=>norm(x)===norm(f)))S.buddyFacts.push(f.trim());});
       S.buddyFacts=S.buddyFacts.slice(-40);
-      S.buddyLog.push("Learner: "+msg,"Emma: "+reply);S.buddyLog=S.buddyLog.slice(-12);
+      S.buddyLog.push("Learner: "+msg,LG().buddy.name+": "+reply);S.buddyLog=S.buddyLog.slice(-12);
       S.xp+=3;save();
     }else if(RP.words){
       missionCheck(msg);
@@ -1419,9 +1472,10 @@ function vSummary(){
 
 /* ---------- exam ---------- */
 let E=null;
-function startExam(){
-  const lv=S.level??0;
-  const up=shuffle(TEST.filter(t=>t.l===lv+1)).slice(0,5),cur=shuffle(TEST.filter(t=>t.l===lv)).slice(0,3);
+async function startExam(){
+  const lv=S.level??0;let bank=TEST;
+  if(!isEN()){if(!ai()){toast("A vizsgához ennél a nyelvnél ChatGPT-kulcs kell.");return;}go("loading");try{bank=await genBank([{l:lv,n:4},{l:lv+1,n:6}]);}catch(e){toast(aiErr(e));go("home");return;}}
+  const up=shuffle(bank.filter(t=>t.l===lv+1)).slice(0,5),cur=shuffle(bank.filter(t=>t.l===lv)).slice(0,3);
   E={items:shuffle(up.concat(cur)).map(t=>({...t,opts:shuffle(t.o),correct:t.o[0]})),i:0,correct:0,answered:false,from:lv};
   go("exam");
 }
@@ -1432,17 +1486,20 @@ function examAnswer(i,btn){
 }
 function vExamResult(){
   app.innerHTML=`<div style="margin-top:30px" class="center"><div style="font-size:4rem">${E.passed?"🚉":"🛤️"}</div><h1>${E.passed?"Átszálltál!":"Majdnem!"}</h1><p class="muted">${E.correct}/${E.items.length} helyes válasz</p></div>
-  <div class="panel center">${E.passed?`<div class="big-level">${LEVELS[S.level]}</div><h2>${LEVEL_HU[S.level]}</h2><p>Mostantól nehezebb leckéket és gyorsabb beszélgetéseket kapsz. +50 XP</p>`:`<p>A szintlépéshez 6 jó válasz kellett volna. Maradsz a(z) <b>${LEVELS[S.level??0]}</b> vonalon, és 10 lecke múlva újra próbálkozhatsz.</p>`}</div>
+  <div class="panel center">${E.passed?`<div class="big-level">${LEVELS[S.level]}</div><h2>${LEVEL_HU[S.level]}</h2><p>Mostantól nehezebb leckéket és gyorsabb beszélgetéseket kapsz. +50 XP</p>`:`<p>A szintlépéshez 6 jó válasz kellett volna. Maradsz ${(/^A/.test(LEVELS[S.level??0])?"az":"a")} <b>${LEVELS[S.level??0]}</b> vonalon, és 10 lecke múlva újra próbálkozhatsz.</p>`}</div>
   <button class="btn big sun" data-act="go" data-v="home">Vissza a főoldalra</button>`;
 }
 
 /* ---------- topic dictionary ---------- */
 function knownSet(){return new Set(S.words.map(w=>w.en.toLowerCase()));}
-function topicAll(t){const extra=(S.topicExtra&&S.topicExtra[t.id])||[];const seen=new Set();return t.words.concat(extra).filter(w=>{const k=w.en.toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});}
+function topicAll(t){const extra=(S.topicExtra&&S.topicExtra[t.id])||[];const base=isEN()?t.words:((S.topicTrans&&S.topicTrans[t.id])||[]);const seen=new Set();return base.concat(extra).filter(w=>{const k=w.en.toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});}
 function topicActive(t,ks){return topicAll(t).filter(w=>!ks.has(w.en.toLowerCase())).slice(0,TOPIC_SHOW);}
 function topicStats(t,ks){const all=topicAll(t);return {known:all.filter(w=>ks.has(w.en.toLowerCase())).length,total:all.length,left:all.filter(w=>!ks.has(w.en.toLowerCase())).length};}
 let topicOpen={},topicLoading={},lastTopicUndo=null;
 function topicRows(t,ks){
+  if(!isEN()&&!(S.topicTrans&&S.topicTrans[t.id])){
+    return topicTransLoading[t.id]?`<p class="muted center">✨ ${LG().flag} Fordítom a téma szavait…</p>`:ai()?`<button class="link" data-act="topictr" data-topic="${t.id}">✨ ${LG().name} szavak betöltése</button>`:`<p class="muted" style="font-size:.88rem">Ennél a nyelvnél a szavakat az AI fordítja le, ehhez ChatGPT-kulcs kell.</p>`;
+  }
   const act=topicActive(t,ks),st=topicStats(t,ks);
   return `<div class="tlisthead"><span></span><span>Szó</span><span>Tudom</span></div>`+act.map(w=>`<div class="trow"><button class="mini" data-act="say" data-t="${esc(w.en)}" aria-label="Felolvasás">🔊</button><span class="ttext"><b>${esc(w.en)}</b><span class="tdash"> – </span><span class="muted">${esc(w.hu)}</span></span><span class="tbox"><input type="checkbox" data-topic="${t.id}" data-en="${esc(w.en)}" aria-label="Tudom: ${esc(w.en)}"></span></div>`).join("")
    +(topicLoading[t.id]?`<p class="muted center">✨ Új szavakat kérek az AI-tól…</p>`:"")
@@ -1459,7 +1516,7 @@ function vTopics(){
     ${c.items.map(t=>{const s=topicStats(t,ks);return `<details class="ttopic" ${topicOpen["t:"+t.id]?"open":""} data-key="t:${t.id}"><summary><span>${esc(t.name)}</span><span class="tbar"><i style="width:${Math.round(s.known/Math.max(1,s.total)*100)}%"></i></span><span class="muted tcount" id="tc-${t.id}">${s.known}/${s.total}</span></summary>
      <div class="tlist" id="tl-${t.id}">${topicRows(t,ks)}</div></details>`;}).join("")}</details>`;}).join("")}
   <div id="undo" class="undobar" hidden><span id="undotext"></span><button class="btn sun" data-act="topicundo">↩️ Visszavonás</button></div>`;
-  app.querySelectorAll("details[data-key]").forEach(d=>d.addEventListener("toggle",()=>{topicOpen[d.dataset.key]=d.open;}));
+  app.querySelectorAll("details[data-key]").forEach(d=>d.addEventListener("toggle",()=>{topicOpen[d.dataset.key]=d.open;if(d.open&&d.dataset.key.startsWith("t:")){const t=findTopic(d.dataset.key.slice(2));if(t&&!isEN()&&ai())topicTranslate(t);}}));
 }
 function findTopic(id){for(const c of TOPICS)for(const t of c.items)if(t.id===id)return t;return null;}
 function refreshTopic(t){const ks=knownSet(),el=document.getElementById("tl-"+t.id),c=document.getElementById("tc-"+t.id);if(el)el.innerHTML=topicRows(t,ks);if(c){const s=topicStats(t,ks);c.textContent=s.known+"/"+s.total;const bar=c.parentElement.querySelector(".tbar i");if(bar)bar.style.width=Math.round(s.known/Math.max(1,s.total)*100)+"%";}}
@@ -1485,8 +1542,8 @@ async function topicMore(t){
   const cat=TOPICS.find(c=>c.items.includes(t)).cat,lv=S.level??1;
   const avoid=topicAll(t).map(w=>w.en).concat(S.words.slice(-150).map(w=>w.en));
   try{
-    const r=await ask(`Give 10 more useful English words or short phrases for the vocabulary topic "${t.name}" (category: ${cat}) for a Hungarian learner at CEFR level ${LEVELS[lv]}. Prefer common, practical items; slightly more advanced than the basics is fine. Do NOT include any of these: ${avoid.join(", ")}.
-Reply with ONLY JSON: {"words":[{"en":"English word or phrase","hu":"accurate Hungarian meaning"}]}`,{modelTier:"quick"});
+    const r=await ask(`${LANGNOTE()}Give 10 more useful ${TL()} words or short phrases${isEN()?"":" (with the article for nouns)"} for the vocabulary topic "${t.name}" (category: ${cat}) for a Hungarian learner at CEFR level ${LEVELS[lv]}. Prefer common, practical items; slightly more advanced than the basics is fine. Do NOT include any of these: ${avoid.join(", ")}.
+Reply with ONLY JSON: {"words":[{"en":"${TL()} word or phrase","hu":"accurate Hungarian meaning"}]}`,{modelTier:"quick"});
     const have=new Set(avoid.map(x=>x.toLowerCase()));
     const add=(Array.isArray(r.words)?r.words:[]).filter(w=>w&&w.en&&w.hu&&!have.has(String(w.en).toLowerCase())).map(w=>({en:String(w.en).trim(),hu:String(w.hu).trim()}));
     S.topicExtra=S.topicExtra||{};S.topicExtra[t.id]=(S.topicExtra[t.id]||[]).concat(add);
@@ -1513,7 +1570,7 @@ function vPractice(){
   app.innerHTML=`<div class="top"><button class="iconbtn" data-act="go" data-v="home" aria-label="Vissza">←</button></div>
   <h2>🎯 Gyakorlóterem</h2><p class="muted">A már megtanult szavaid és nyelvtanod gyakorlása, játékosan. ${n} szó · ${g} nyelvtani pont · ${due} szó esedékes ma</p>
   <h3 style="margin:18px 0 10px">Szavak</h3><div class="rowlist">
-  ${card("p-recall","🔁","Esedékes ismétlés",due?`${Math.min(6,due)} szó vár rád: mondd ki angolul`:"Most nincs esedékes szó, a leggyengébbeket kérdezem",n>=2,"Ehhez legalább 2 tanult szó kell.")}
+  ${card("p-recall","🔁","Esedékes ismétlés",due?`${Math.min(6,due)} szó vár rád: mondd ki ${TLHU()}`:"Most nincs esedékes szó, a leggyengébbeket kérdezem",n>=2,"Ehhez legalább 2 tanult szó kell.")}
   ${card("p-sprint","⏱️","Villám-sprint",`60 másodperc, minél több helyes válasz${S.sprintBest?` · rekord: ${S.sprintBest}`:""}`,n>=4,"Ehhez legalább 4 tanult szó kell.")}
   ${card("p-memory","🃏","Memóriajáték","Fordítsd fel a kártyákat, és találd meg a párokat",n>=6,"Ehhez legalább 6 tanult szó kell.")}
   ${card("p-story","📖","Sztori a szavaidból","Az AI vicces történetet ír a szavaidból, te pótolod a hiányzókat",n>=6&&hasAI,n<6?"Ehhez legalább 6 tanult szó kell.":"Ehhez ChatGPT-kulcs kell.",true)}
@@ -1555,7 +1612,7 @@ function sprintQ(){
   const correct=dir?w.hu:w.en,opts=shuffle([correct].concat(others.map(o=>dir?o.hu:o.en)));
   P.q={w,dir,correct,opts};P.lock=false;
   app.innerHTML=pHead("⏱️ Villám-sprint")+`<div class="sprintbar"><span>Pont: <b>${P.score}</b></span><span>${P.combo>=3?`🔥 x${1+Math.floor(P.combo/3)}`:`Sorozat: ${P.combo}`}</span></div>
-  <p class="muted center">${dir?"Mit jelent?":"Hogy mondod angolul?"}</p><div class="recallword">${esc(dir?w.en:w.hu)}</div>
+  <p class="muted center">${dir?"Mit jelent?":"Hogy mondod "+TLHU()+"?"}</p><div class="recallword">${esc(dir?w.en:w.hu)}</div>
   <div class="opts">${opts.map((o,i)=>`<button class="opt" data-act="sp-ans" data-i="${i}">${esc(o)}</button>`).join("")}</div>`;
   if(dir)speak(w.en,1);
 }
@@ -1579,7 +1636,7 @@ function pMemory(){
 }
 function memRender(){
   app.innerHTML=pHead("🃏 Memóriajáték")+`<div class="sprintbar"><span>Lépések: <b>${P.moves}</b></span><span>Párok: <b>${P.done.size}/6</b></span></div>
-  <p class="muted center">Fordíts fel két kártyát: egy angol szót és a magyar jelentését.</p>
+  <p class="muted center">Fordíts fel két kártyát: egy ${LG().adj} szót és a magyar jelentését.</p>
   <div class="memgrid">${P.cards.map((c,i)=>{const up=P.open.includes(i)||P.done.has(c.k);return `<button class="memcard ${up?"up":""} ${P.done.has(c.k)?"matched":""} ${c.en?"en":"hu"}" data-act="mem" data-i="${i}" ${P.done.has(c.k)?"disabled":""}>${up?esc(c.t):"?"}</button>`;}).join("")}</div>`;
 }
 function memTap(i){
@@ -1603,7 +1660,7 @@ async function pStory(){
   app.innerHTML=pHead("📖 Sztori a szavaidból")+`<div class="loader"><div class="train">📖</div><h2 style="margin-top:20px">Írom a történetet…</h2></div>`;
   try{
     const lv=S.level??1;
-    const r=await ask(`Write a short, funny, surprising story (6-8 sentences) in English for a Hungarian learner at CEFR level ${LEVELS[lv]}. ${LEVEL_GUIDE[lv]}
+    const r=await ask(`${LANGNOTE()}Write a short, funny, surprising story (6-8 sentences) in ${TL()} for a Hungarian learner at CEFR level ${LEVELS[lv]}. ${LEVEL_GUIDE[lv]}
 It MUST use ALL of these words or phrases: ${ws.map(w=>w.en).join(", ")}.${gr?` Also use the grammar point "${gr.topic}" naturally at least twice.`:""}
 Wrap EVERY use of a target word in double square brackets, exactly once per target word, e.g. [[ticket]]. You may adapt the form (plural, past tense) inside the brackets.
 Reply with ONLY JSON: {"title_en":"short title","story_en":"the story with [[...]] gaps","story_hu":"natural Hungarian translation of the whole story (no brackets)"}`);
@@ -1638,9 +1695,9 @@ async function pGrammar(kind){
   app.innerHTML=pHead(kind==="gmix"?"📐 Nyelvtan-mix":"🕵️ Nyelvtan-detektív")+`<div class="loader"><div class="train">📐</div><h2 style="margin-top:20px">Összerakom a feladatokat…</h2></div>`;
   const lv=S.level??1;
   try{
-    const r=kind==="gmix"?await ask(`Create 6 varied grammar practice items for a Hungarian learner (CEFR ${LEVELS[lv]}) mixing these grammar points: ${gs.map(g=>`"${g.topic}"`).join(", ")}. Weaker points first: give the first one more items. Use some of the learner's own words in the sentences: ${ws.join(", ")}. Make the wrong options typical learner mistakes.
+    const r=kind==="gmix"?await ask(`${LANGNOTE()}Create 6 varied ${TL()} grammar practice items for a Hungarian learner (CEFR ${LEVELS[lv]}) mixing these grammar points: ${gs.map(g=>`"${g.topic}"`).join(", ")}. Weaker points first: give the first one more items. Use some of the learner's own words in the sentences: ${ws.join(", ")}. Make the wrong options typical learner mistakes.
 Reply with ONLY JSON: {"items":[{"topic":"one of the given grammar points (exact text)","q":"sentence with ___ for the gap","options":["CORRECT","wrong","wrong","wrong"],"why_hu":"very short Hungarian explanation"}]}`)
-    :await ask(`Create 5 English sentences for a Hungarian learner (CEFR ${LEVELS[lv]}), each with exactly ONE grammar mistake related to these grammar points: ${gs.map(g=>`"${g.topic}"`).join(", ")}. Use some of the learner's own words: ${ws.join(", ")}.
+    :await ask(`${LANGNOTE()}Create 5 ${TL()} sentences for a Hungarian learner (CEFR ${LEVELS[lv]}), each with exactly ONE grammar mistake related to these grammar points: ${gs.map(g=>`"${g.topic}"`).join(", ")}. Use some of the learner's own words: ${ws.join(", ")}.
 Reply with ONLY JSON: {"items":[{"topic":"one of the given grammar points (exact text)","wrong":"sentence with one mistake","correct":"corrected sentence","why_hu":"very short Hungarian explanation"}]}`);
     let items=Array.isArray(r.items)?r.items:[];
     if(kind==="gmix"){items=items.filter(x=>x&&x.q&&Array.isArray(x.options)&&x.options.length>=3).slice(0,6);items.forEach(x=>{x.correct=x.options[0];x.opts=shuffle(x.options.slice(0,4));});}
@@ -1681,7 +1738,8 @@ function pMission(){
   const base=shuffle(SCENARIOS.filter(s=>(s.group==="world"||s.group==="meet")&&isUnlocked(s)))[0];
   const sc=Object.assign({},base,{id:"mission",title_hu:"Használd a szavaidat!",goal_hu:`Beszélgess ${base.character.split(",")[0]} szereplővel, és használd mind az 5 szót!`,tasks_hu:ws.map(w=>`Használd: ${w.en} (${w.hu})`)});
   P={mode:"mission"};
-  startRoleplay(sc,false);RP.words=ws;
+  if(isEN()){startRoleplay(sc,false);RP.words=ws;return;}
+  go("loading");openerFor(sc).then(o=>{startRoleplay(Object.assign(scView(sc),o),false);RP.words=ws;}).catch(e=>{toast(aiErr(e));go("practice");});
 }
 function missionCheck(msg){
   if(!RP||!RP.words)return;const m=" "+norm(msg)+" ";
@@ -1695,7 +1753,7 @@ function vScenarios(){
   const sec=(g,title,desc)=>`<h3 style="margin:22px 0 4px">${title}</h3><p class="muted" style="font-size:.9rem;margin-bottom:10px">${desc}</p><div class="rowlist">${SCENARIOS.filter(s=>s.group===g).map(scRow).join("")}</div>`;
   app.innerHTML=`<div class="top"><button class="iconbtn" data-act="go" data-v="home" aria-label="Vissza">←</button></div>
   <h2>Szerepjátékok</h2><p class="muted">A szereplők a te szintedhez igazítják a beszédüket.</p>
-  <div class="rowlist" style="margin-top:14px"><button class="rowbtn buddy" data-act="buddy"><span class="em">☕</span><span><b>Csevegés Emmával</b><small>Kötetlen beszélgetés egy angol baráttal, aki emlékszik rád</small></span></button></div>
+  <div class="rowlist" style="margin-top:14px"><button class="rowbtn buddy" data-act="buddy"><span class="em">☕</span><span><b>Csevegés ${LG().buddy.with}</b><small>Kötetlen beszélgetés egy ${LG().adj} baráttal, aki emlékszik rád</small></span></button></div>
   ${sec("meet","👋 Ismerkedés","Bemutatkozás és small talk új emberekkel.")}
   ${sec("world","🌍 Helyzetek","Hétköznapi és kalandos szituációk küldetésekkel.")}
   ${sec("secret","🔒 Titkos jelenetek","A napi sorozatod jutalmai.")}`;
@@ -1709,7 +1767,7 @@ function vGrammarList(){
   <h2>📐 Nyelvtani kisokos</h2>${(S.grammar||[]).length?`<button class="btn big sun" data-act="go" data-v="practice" style="margin:10px 0">🎯 Nyelvtan gyakorlása</button>`:""}<p class="muted">Minden leckében egy nyelvtani pont jön, a szintednek megfelelő tanmenet szerint. A pöttyök mutatják, mennyire ment a gyakorlás; amit nehéznek találtál, az később visszatér.</p>
   ${done.length?done.slice().reverse().map(card).join(""):`<div class="panel"><p>Még nincs tanult nyelvtan. Az első leckédben kezdünk.</p></div>`}
   <h3 style="margin:22px 0 10px">${LEVELS[lv]} tanmenet</h3>
-  <div class="panel">${GRAMMAR[lv].map(t=>`<p>${done.some(g=>g.topic===t)?"✅":"⬜"} ${esc(t)}</p>`).join("")}</div>`;
+  <div class="panel">${curriculum()?curriculum()[lv].map(t=>`<p>${done.some(g=>g.topic===t)?"✅":"⬜"} ${esc(t)}</p>`).join(""):`<p class="muted">A tanmenetet az első leckénél állítja össze az AI.</p>`}</div>`;
 }
 let wq="";
 function vWords(){
@@ -1748,23 +1806,23 @@ function vSettings(){
    <p style="font-size:.95rem;margin-top:6px">Ha új frissítést kapsz (egy .html vagy .zip fájl), töltsd le a telefonra, és itt töltsd be. Nem kell újratelepíteni, a haladásod megmarad.</p>
    <button class="btn" data-act="pickupdate" style="margin-top:10px">📥 Frissítés betöltése fájlból</button>
    ${hasUpd?`<div><button class="link" data-act="resetupdate" style="margin-top:8px">↩️ Visszaállás az eredeti verzióra</button></div>`:""}</div>`:""}
-  <div class="panel"><h3>Emma ezt tudja rólad</h3>${S.buddyFacts.length?`<ul class="facts">${S.buddyFacts.map(f=>`<li>${esc(f)}</li>`).join("")}</ul><button class="link" data-act="forget" style="color:var(--red)">Emma felejtse el</button>`:`<p class="muted">Még semmit. Beszélgess vele, és megjegyzi, amit mesélsz magadról.</p>`}</div>
-  <div class="panel"><h3>Akcentus</h3><div class="chips" style="margin-top:10px"><button class="chip" data-act="accent" data-v="en-GB" aria-pressed="${S.settings.accent==="en-GB"}">🇬🇧 Brit</button><button class="chip" data-act="accent" data-v="en-US" aria-pressed="${S.settings.accent==="en-US"}">🇺🇸 Amerikai</button></div></div>
+  <div class="panel"><h3>${LG().buddy.name} ezt tudja rólad</h3>${S.buddyFacts.length?`<ul class="facts">${S.buddyFacts.map(f=>`<li>${esc(f)}</li>`).join("")}</ul><button class="link" data-act="forget" style="color:var(--red)">${LG().buddy.name} felejtse el</button>`:`<p class="muted">Még semmit. Beszélgess vele, és megjegyzi, amit mesélsz magadról.</p>`}</div>
+  <div class="panel"><h3>Akcentus</h3><div class="chips" style="margin-top:10px">${LG().acc.map(([v,l])=>`<button class="chip" data-act="accent" data-v="${v}" aria-pressed="${S.settings.accent===v}">${l}</button>`).join("")}</div></div>
   <div class="panel"><h3>Beszédtempó</h3><div class="chips" style="margin-top:10px">${[[0.75,"Lassú"],[0.95,"Normál"],[1.1,"Gyors"]].map(([v,l])=>`<button class="chip" data-act="rate" data-v="${v}" aria-pressed="${S.settings.rate===v}">${l}</button>`).join("")}</div><button class="link" data-act="say" data-t="Hello! This is how I sound." style="margin-top:8px">Próba 🔊</button></div>
   <div class="panel"><h3>Érdeklődés</h3><div class="chips" style="margin-top:10px">${INTERESTS.map(i=>`<button class="chip" data-act="sinterest" data-v="${esc(i)}" aria-pressed="${S.interests.includes(i)}">${esc(i)}</button>`).join("")}</div></div>
   <div class="panel"><h3>Szint</h3><p>Jelenleg: <b>${LEVELS[S.level??0]} – ${LEVEL_HU[S.level??0]}</b></p>
    <div class="chips" style="margin-top:10px">${LEVELS.map((l,i)=>`<button class="chip" data-act="setlevel" data-v="${i}" aria-pressed="${S.level===i}">${l}</button>`).join("")}</div>
    <button class="btn ghost" data-act="retest" style="margin-top:14px">Szintfelmérő újra</button></div>
-  <div class="panel"><h3>💾 Biztonsági mentés</h3><p class="muted" style="font-size:.92rem">Ha valaha újra kell telepítened az appot, ezzel átmentheted a haladásodat (szavak, nyelvtan, Emma emlékei, sorozat). Másold ki, és tedd el például egy jegyzetbe vagy e-mailbe.</p>
+  <div class="panel"><h3>💾 Biztonsági mentés</h3><p class="muted" style="font-size:.92rem">Ha valaha újra kell telepítened az appot, ezzel átmentheted a haladásodat (minden nyelv: szavak, nyelvtan, beszélgetőtársak emlékei, sorozat). Másold ki, és tedd el például egy jegyzetbe vagy e-mailbe.</p>
    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><button class="btn" data-act="bk-copy">📋 Mentés másolása</button><button class="btn ghost" data-act="bk-show">📥 Visszaállítás</button></div>
    <textarea id="bkout" hidden readonly style="margin-top:10px;min-height:90px;font-size:.8rem"></textarea>
    <textarea id="bkin" hidden placeholder="Illeszd be ide a korábban kimásolt mentést…" style="margin-top:10px;min-height:90px;font-size:.8rem"></textarea>
    <button class="btn sun" id="bkdo" data-act="bk-restore" hidden style="margin-top:8px">Visszaállítás most</button></div>
-  <button class="link" data-act="reset" style="color:var(--red)">Minden adat törlése</button>`;
+  <button class="link" data-act="reset" style="color:var(--red)">${LG().flag} ${LG().name} profil törlése</button>`;
 }
 
 function backupCopy(){
-  const data="BESZELJ-MENTES:"+btoa(unescape(encodeURIComponent(JSON.stringify({v:1,state:S,key:API_KEY}))));
+  save();const data="BESZELJ-MENTES:"+btoa(unescape(encodeURIComponent(JSON.stringify({v:2,lang:LANG,profiles:allProfiles(),key:API_KEY}))));
   const out=document.getElementById("bkout");
   const done=()=>toast("📋 Mentés kimásolva! Illeszd be egy jegyzetbe.",3500);
   const manual=()=>{if(out){out.hidden=false;out.value=data;out.focus();out.select();try{document.execCommand("copy")?done():toast("Jelöld ki és másold ki a szöveget.",3500);}catch(e){toast("Jelöld ki és másold ki a szöveget.",3500);}}};
@@ -1774,11 +1832,90 @@ function backupRestore(){
   const t=(document.getElementById("bkin")||{}).value||"";
   try{
     const m=t.trim().replace(/^BESZELJ-MENTES:/,"");const o=JSON.parse(decodeURIComponent(escape(atob(m))));
-    if(!o||!o.state||!Array.isArray(o.state.words))throw 0;
-    if(!tapTwice("bkr","Koppints újra: a jelenlegi haladás felülíródik a mentéssel."))return;
-    S=Object.assign(defaultState(),o.state);if(o.key)API_KEY=o.key;try{localStorage.setItem(KEYLS,API_KEY);}catch(e){}save();toast("✅ Visszaállítva!");go("home");
+    const profs=o&&o.v===2&&o.profiles?o.profiles:(o&&o.state?{en:o.state}:null);
+    if(!profs||!Object.values(profs).every(p=>p&&Array.isArray(p.words)))throw 0;
+    if(!tapTwice("bkr","Koppints újra: a mentésben lévő nyelvek haladása felülíródik."))return;
+    Object.keys(profs).forEach(c=>{if(LANGS[c]){try{localStorage.setItem(keyFor(LS,c),JSON.stringify(profs[c]));}catch(e){}}});
+    if(o.key){API_KEY=o.key;try{localStorage.setItem(KEYLS,API_KEY);}catch(e){}}
+    const r=readProfile(LANG);S=r?Object.assign(defaultState(),r):defaultState();migrateS();save();
+    toast(`✅ Visszaállítva! (${Object.keys(profs).map(c=>LANGS[c]?LANGS[c].flag:"").join(" ")})`);go(S.level!==null?"home":"welcome");
   }catch(e){toast("Ez nem érvényes mentés.",3000);}
 }
+/* ---------- multi-language helpers ---------- */
+async function genBank(spec){
+  const total=spec.reduce((a,x)=>a+x.n,0);
+  const r=await ask(`${LANGNOTE()}Create a ${TL()} CEFR level test for a Hungarian speaker: ${total} multiple-choice items: ${spec.map(x=>`${x.n} items at level ${LEVELS[x.l]} (field "l": ${x.l})`).join(", ")}.
+Mix item types: (a) grammar gap-fill: "q" is a ${TL()} sentence with ___; (b) vocabulary: "q" is "Mit jelent: <${TL()} word>?" with Hungarian options; (c) about one in four items is listening: add "listen" with a ${TL()} sentence, "q":"Mit hallottál?", and Hungarian options that differ from the correct one in exactly one detail.
+The FIRST option in "o" is always the correct one; wrong options must be plausible typical mistakes. Exactly one option may be correct.
+Reply with ONLY JSON: {"items":[{"l":0,"q":"...","o":["correct","wrong","wrong","wrong"],"listen":"optional"}]}`);
+  const items=(Array.isArray(r.items)?r.items:[]).filter(x=>x&&typeof x.q==="string"&&Array.isArray(x.o)&&x.o.length>=3&&x.l>=0&&x.l<=4).map(x=>({l:+x.l,q:x.q,o:x.o.slice(0,4).map(String),listen:x.listen?String(x.listen):undefined}));
+  if(items.length<Math.min(6,total))throw {code:"bad_json"};
+  return items;
+}
+function curriculum(){return isEN()?GRAMMAR:(S.curriculum||null);}
+async function ensureCurriculum(){
+  if(isEN()||S.curriculum)return true;if(!ai())return false;
+  try{
+    const r=await ask(`${LANGNOTE()}Create a grammar syllabus for Hungarian speakers learning ${TL()}. For each CEFR level A1, A2, B1, B2, C1 list exactly 12 grammar points in a sensible teaching order, as short Hungarian names (you may add the ${TL()} term in brackets).
+Reply with ONLY JSON: {"levels":[["12 points for A1"],["A2"],["B1"],["B2"],["C1"]]}`);
+    const lv=Array.isArray(r.levels)?r.levels.map(a=>Array.isArray(a)?a.map(String).filter(Boolean).slice(0,14):[]):[];
+    if(lv.length===5&&lv.every(a=>a.length>=6)){S.curriculum=lv;save();return true;}
+  }catch(e){}
+  return false;
+}
+function bankWords(){
+  if(isEN()){const out=[];TOPICS.forEach(c=>c.items.forEach(t=>out.push(...t.words)));return out;}
+  return Object.values(S.topicTrans||{}).flat();
+}
+let topicTransLoading={};
+async function topicTranslate(t){
+  if(isEN()||topicTransLoading[t.id]||(S.topicTrans&&S.topicTrans[t.id]))return;
+  if(!ai()){return;}
+  topicTransLoading[t.id]=true;refreshTopic(t);
+  try{
+    const r=await ask(`${LANGNOTE()}Translate these Hungarian vocabulary items into their most common, natural ${TL()} equivalents for a learner. For nouns include the article. Keep the same order and give exactly one translation per item.
+Items: ${t.words.map(w=>w.hu).join(" | ")}
+Reply with ONLY JSON: {"words":[{"hu":"the Hungarian item","tl":"${TL()} translation"}]}`,{modelTier:"quick"});
+    const arr=(Array.isArray(r.words)?r.words:[]).filter(x=>x&&x.hu&&x.tl).map(x=>({en:String(x.tl).trim(),hu:String(x.hu).trim()}));
+    if(arr.length>=5){S.topicTrans=S.topicTrans||{};S.topicTrans[t.id]=arr;save();}
+    else toast("Nem sikerült lefordítani a témát, próbáld újra.");
+  }catch(e){toast(aiErr(e));}
+  topicTransLoading[t.id]=false;if(view==="topics")refreshTopic(t);
+}
+async function openerFor(sc){
+  const lv=S.level??1;
+  const r=await ask(`${LANGNOTE()}You are ${sc.character} in this scene: ${sc.setting} (if it mentions an English-speaking place, move it to a typical ${TL()}-speaking city).
+Write your FIRST line that starts the scene, in ${TL()}, for a Hungarian learner at level ${LEVELS[lv]}. ${LEVEL_GUIDE[lv]}
+The learner's tasks (they must do these themselves, so do NOT do, ask or offer any of them): ${sc.tasks_hu.join("; ")}.
+Reply with ONLY JSON: {"opener":"your first line in ${TL()}","opener_hu":"Hungarian translation"}`,{modelTier:"quick"});
+  if(!r||!r.opener)throw {code:"bad_json"};
+  return {opener:String(r.opener),opener_hu:String(r.opener_hu||"")};
+}
+function startScenario(sc){
+  if(isEN()){startRoleplay(sc,false);return;}
+  go("loading");openerFor(sc).then(o=>startRoleplay(Object.assign(scView(sc),o),false)).catch(e=>{toast(aiErr(e));go("scenarios");});
+}
+function switchLang(code){
+  if(!LANGS[code]||code===LANG){go(S.level!==null?"home":"welcome");return;}
+  if(SS&&!SS.review)saveSession();save();clearInterval(clockTimer);
+  LANG=code;try{localStorage.setItem("beszelj-lang",code);}catch(e){}
+  const r=readProfile(code);S=r?Object.assign(defaultState(),r):defaultState();migrateS();
+  SS=null;RP=null;view=S.level!==null?"home":"welcome";render();window.scrollTo(0,0);
+  toast(`${LG().flag} ${LG().name} profil`,1800);
+}
+function vLangs(){
+  app.innerHTML=`<div class="top"><button class="iconbtn" data-act="go" data-v="${S.level!==null?"home":"welcome"}" aria-label="Vissza">←</button></div>
+  <h2>🌍 Nyelvek</h2><p class="muted">Minden nyelvnek teljesen külön profilja van: saját szint, szavak, nyelvtan, sorozat és beszélgetőtárs. A nyelvváltás a többit nem befolyásolja.</p>
+  <div class="rowlist" style="margin-top:14px">${Object.entries(LANGS).map(([c,l])=>{const p=c===LANG?S:readProfile(c);const st=p&&p.level!==null?`${LEVELS[p.level]} · ${(p.words||[]).length} szó · ${p.streak||0}🔥`:"Még nem kezdted el";
+   return `<button class="rowbtn ${c===LANG?"buddy":""}" data-act="lang" data-v="${c}"><span class="em">${l.flag}</span><span><b>${l.name}${c===LANG?" ✓":""}</b><small>${st}${c!=="en"?" · ChatGPT-kulccsal":""}</small></span></button>`;}).join("")}</div>
+  <p class="muted" style="font-size:.88rem;margin-top:14px">Az angolon kívüli nyelveknél a leckéket, a szintfelmérőt és a Témaszótár szavait az AI állítja össze, ezért ezekhez ChatGPT-kulcs kell.</p>`;
+}
+function vLevelPick(){
+  app.innerHTML=`<div class="top"><button class="iconbtn" data-act="go" data-v="welcome" aria-label="Vissza">←</button></div>
+  <h2>${LG().flag} Milyen szinten vagy?</h2><p class="muted">AI-kulcs nélkül a szintfelmérő nem érhető el ennél a nyelvnél, ezért válaszd ki magad. Később a Beállításokban módosíthatod.</p>
+  <div class="rowlist" style="margin-top:14px">${LEVELS.map((l,i)=>`<button class="rowbtn" data-act="pickLevel" data-v="${i}"><span class="em">${l}</span><span><b>${LEVEL_HU[i]}</b><small>${["Most kezdem, vagy csak pár szót tudok","Egyszerű mondatokat értek és mondok","Hétköznapi helyzetekben elboldogulok","Folyékonyan beszélgetek a legtöbb témáról","Szinte mindent értek, árnyaltan fogalmazok"][i]}</small></span></button>`).join("")}</div>`;
+}
+
 /* ---------- remote update ---------- */
 const RU_URL="beszelj-remote-url",RU_LAST="beszelj-remote-last";
 function ruGet(k){try{return localStorage.getItem(k)||"";}catch(e){return "";}}
@@ -1818,7 +1955,7 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-act]");if(!b||b.disabled)return;
   const a=b.dataset.act;
   switch(a){
-    case "start":ob={name:S.name||"",interests:S.interests.slice()};go("onboard");break;
+    case "start":{let nm=S.name||"",it=S.interests.slice();if(!nm||!it.length){for(const c of Object.keys(LANGS)){const p=c===LANG?null:readProfile(c);if(p){nm=nm||p.name||"";if(!it.length&&Array.isArray(p.interests))it=p.interests.slice();}}}ob={name:nm,interests:it};go("onboard");break;}
     case "interest":{const v=b.dataset.v;ob.interests=ob.interests.includes(v)?ob.interests.filter(x=>x!==v):[...ob.interests,v];b.setAttribute("aria-pressed",ob.interests.includes(v));document.querySelector('[data-act="to-test"]').disabled=!ob.interests.length;break;}
     case "to-test":startTest();break;
     case "tans":testAnswer(+b.dataset.i,b);break;
@@ -1834,6 +1971,9 @@ document.addEventListener("click",e=>{
     case "quit":if(SS&&SS.review){const back=SS.backTo||"words";SS=null;go(back);break;}saveSession();clearInterval(clockTimer);SS=null;go("home");toast("A leckét a főoldalon folytathatod.");break;
     case "m":matchTap(b);break;
     case "lans":listenAnswer(+b.dataset.i,b);break;
+    case "lang":switchLang(b.dataset.v);break;
+    case "pickLevel":T={result:{level:+b.dataset.v,feedback:"",focus:[],corrected:""},correct:0,total:0};finishOnboard();break;
+    case "topictr":{const t=findTopic(b.dataset.topic);if(t)topicTranslate(t);break;}
     case "pnope":toast(b.dataset.why||"Ez most nem érhető el.");break;
     case "p-recall":pRecall();break;
     case "p-sprint":pSprint();break;
@@ -1893,7 +2033,7 @@ document.addEventListener("click",e=>{
     case "tcheck":transCheck();break;
     case "hint":{const h=document.getElementById("hint");if(h)h.hidden=false;break;}
     case "evalspeak":evalSpeak();break;
-    case "scenario":{const sc=SCENARIOS.find(x=>x.id===b.dataset.id);if(!isUnlocked(sc)){toast(`🔒 Ez a jelenet ${sc.unlock} napos sorozatnál nyílik meg. Most: ${S.streak} nap.`);break;}if(!ai()){toast("A szerepjátékhoz add meg a ChatGPT-kulcsot a ⚙️ Beállításokban.");break;}startRoleplay(sc,false);break;}
+    case "scenario":{const sc=SCENARIOS.find(x=>x.id===b.dataset.id);if(!isUnlocked(sc)){toast(`🔒 Ez a jelenet ${sc.unlock} napos sorozatnál nyílik meg. Most: ${S.streak} nap.`);break;}if(!ai()){toast("A szerepjátékhoz add meg a ChatGPT-kulcsot a ⚙️ Beállításokban.");break;}startScenario(sc);break;}
     case "buddy":startBuddy();break;
     case "hu":{const t=RP.turns[+b.dataset.i];t.showHu=!t.showHu;vRoleplay();break;}
     case "sugg":{const inp=document.getElementById("rin");if(inp){inp.value=RP.sugg[+b.dataset.i];inp.focus();toast("Mondd ki hangosan is, mielőtt elküldöd! 🗣️");}break;}
@@ -1907,13 +2047,13 @@ document.addEventListener("click",e=>{
     case "delkey":setKey("");vSettings();toast("Kulcs törölve");break;
     case "pickupdate":try{AndroidBridge.pickUpdate();}catch(err){toast("A frissítés betöltése nem sikerült.");}break;
     case "resetupdate":if(tapTwice("rup","Koppints újra a visszaálláshoz.")){try{AndroidBridge.resetUpdate();}catch(err){}}break;
-    case "forget":if(tapTwice("forget","Koppints újra: Emma mindent elfelejt rólad.")){S.buddyFacts=[];S.buddyLog=[];save();vSettings();}break;
+    case "forget":if(tapTwice("forget","Koppints újra: "+LG().buddy.name+" mindent elfelejt rólad.")){S.buddyFacts=[];S.buddyLog=[];save();vSettings();}break;
     case "accent":S.settings.accent=b.dataset.v;save();vSettings();speak("Hello! How are you today?");break;
     case "rate":S.settings.rate=+b.dataset.v;save();vSettings();break;
     case "sinterest":{const v=b.dataset.v;S.interests=S.interests.includes(v)?S.interests.filter(x=>x!==v):[...S.interests,v];save();b.setAttribute("aria-pressed",S.interests.includes(v));break;}
     case "setlevel":S.level=+b.dataset.v;save();vSettings();break;
     case "retest":ob={name:S.name,interests:S.interests.slice()};startTest();break;
-    case "reset":if(tapTwice("reset","Koppints újra: minden haladás és szó törlődik.")){S=defaultState();save();go("welcome");}break;
+    case "reset":if(tapTwice("reset","Koppints újra: "+az(LG().adj)+" nyelv minden haladása és szava törlődik.")){S=defaultState();save();go("welcome");}break;
   }
 });
 render();
@@ -1923,6 +2063,7 @@ ruSet("beszelj-remote-ok",APP_VERSION);
 /* what's new */
 const CHANGELOG={
  "2.15":["Frissítés után az app megmutatja, mi változott (ezt látod most 🙂)","Az első távoli frissítés sikeresen megérkezett a GitHubról 🎉"],
+ "2.19":["🌍 Új nyelvek: német, spanyol, olasz és francia. A főoldal bal felső sarkában a zászlóra koppintva válthatsz","Minden nyelvnek teljesen külön profilja van, az angol haladásod érintetlen marad","Minden nyelvhez saját beszélgetőtárs tartozik: Lena (német), Lucía (spanyol), Giulia (olasz), Camille (francia)","Új, zászlós ikon"],
  "2.18":["Villám-sprint: egy körön belül minden szó csak egyszer jön, amíg az összes el nem fogy; a gyengébb szavak kerülnek előre"],
  "2.17":["Szerepjáték: a szereplők már nem teljesítik helyetted a feladataidat, és nem ők teszik fel a kérdéseket, amiket neked kell"],
  "2.16":["Az app mostantól iPhone-on is használható: Safariból a kezdőképernyőre tehető, saját ikonnal","A haladásod a 💾 Biztonsági mentéssel átvihető egyik telefonról a másikra"]
@@ -1936,6 +2077,9 @@ const CHANGELOG={
 })();
 ruAuto();
 window.__dbg=function(c){return eval(c);};
+}
+if(!window.__SKIP_MAIN)__main();
+
 }
 if(!window.__SKIP_MAIN)__main();
 </script>
